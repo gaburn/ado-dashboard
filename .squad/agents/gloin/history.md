@@ -2,11 +2,11 @@
 
 - **Owner:** the team
 - **Project:** wip-dashboard — Textual TUI for Azure DevOps work items and PRs
-- **Stack:** Python 3.11+, Textual, httpx, Azure DevOps REST API, PAT auth
+- **Stack:** Python 3.11+, pyproject.toml, pipx-installable, keyring for secrets
 - **Created:** 2026-05-08
 - **Cast:** Lord of the Rings — Thorin's Company
 
 ## Learnings
 
-- Thorin completed contributor docs (2026-05-08): See `docs/ado-integration.md` for Azure DevOps CLI shapes, auth, error handling, and JSON mapping patterns.
+<!-- Append new learnings below. Each entry is something lasting about the project. -->
 - **Thorin OSS Scrub (2026-05-08):** Removed Microsoft-internal identifiers; introduced InvestigationLauncher Protocol adapter. Env var renamed: `BAND_REPO_ROOT` → `WIP_DASHBOARD_REPO_ROOT`. See `.squad/decisions/decisions.md`.
