@@ -47,7 +47,7 @@ Work items are fetched with a two-level parent walk: the initial WIQL result is 
 ## Auth Assumptions
 
 - The `az` CLI must be pre-authenticated (`az login`). The app makes no auth calls itself.
-- All queries use the configured `ORG_URL` (e.g., `https://dev.azure.com/microsoft`).
+- All queries use the configured `ORG_URL` (e.g., `https://dev.azure.com/your-org`).
 - The `ADO_PROJECT` / `PROJECTS` config values must match existing ADO projects the account has read access to.
 
 ---

@@ -39,12 +39,7 @@ def _find_repo_root() -> str:
 
 
 # WIP_DASHBOARD_REPO_ROOT overrides automatic git-root detection.
-# BAND_REPO_ROOT is accepted as a deprecated alias for backward compatibility.
-REPO_ROOT: str = (
-    os.environ.get("WIP_DASHBOARD_REPO_ROOT")
-    or os.environ.get("BAND_REPO_ROOT")
-    or _find_repo_root()
-)
+REPO_ROOT: str = os.environ.get("WIP_DASHBOARD_REPO_ROOT") or _find_repo_root()
 
 # ---------------------------------------------------------------------------
 # Resolved values — env vars win, then defaults.

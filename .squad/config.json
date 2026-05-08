@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "agentModelOverrides": {
+    "thorin": "claude-opus-4.7-1m-internal",
+    "balin": "claude-opus-4.7-1m-internal",
+    "dwalin": "claude-opus-4.7-1m-internal",
+    "gloin": "claude-opus-4.7-1m-internal"
+  }
+}

@@ -44,9 +44,8 @@ Read at module import time (`os.environ.get`). `config.load_from_file` skips a c
 | `COPILOT_SESSION_DIR` | `COPILOT_SESSION_DIR` | `~/.copilot/session-state` |
 | `SESSION_MAX_AGE_DAYS` | `SESSION_MAX_AGE_DAYS` | `7` |
 | `WIP_DASHBOARD_REPO_ROOT` | `REPO_ROOT` | git-root auto-detected |
-| `BAND_REPO_ROOT` | `REPO_ROOT` | _(deprecated alias for `WIP_DASHBOARD_REPO_ROOT`)_ |
 
-**Note:** `PROJECTS` (the list used for PR queries) has no corresponding env var — it can only be set via config file, CLI `--projects`, or the in-app Settings screen.
+**Note:**`PROJECTS` (the list used for PR queries) has no corresponding env var — it can only be set via config file, CLI `--projects`, or the in-app Settings screen.
 
 ---
 
