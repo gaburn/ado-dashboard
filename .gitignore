@@ -1,0 +1,21 @@
+# Python build / cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+
+# Runtime logs and local state (must never be committed — may contain
+# user emails, internal project names, work item IDs, session UUIDs)
+*.log
+.copilot/
+~/.wip-dashboard/
+
+# Squad framework lives only on the dev branch — keep it out of main
+# even if a careless merge brings it in.
+.squad/
+.squad-workstream
+.github/agents/squad.agent.md
+.github/workflows/squad-*.yml
+.github/workflows/sync-squad-labels.yml
