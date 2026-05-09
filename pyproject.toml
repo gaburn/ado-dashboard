@@ -11,8 +11,27 @@ dependencies = [
     "textual>=3.0.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
 [project.scripts]
 wip-dashboard = "wip_dashboard.__main__:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/wip_dashboard"]
+
+[tool.pytest.ini_options]
+testpaths = ["src/tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]  # line length handled by formatter when adopted
