@@ -9,3 +9,4 @@
 ## Learnings
 
 - Thorin completed contributor docs (2026-05-08): See `docs/configuration.md` for configuration layer resolution, schema, setup wizard, and in-app settings. See `docs/development.md` for UX conventions, CSS patterns, and known cruft tracker.
+- **Dwalin Test Suite (2026-05-08):** 79 tests written for config, investigation, models, triage. Establishes pytest fixtures, autouse patterns for module state, and test conventions. See `src/tests/` and `.squad/decisions/decisions.md`.

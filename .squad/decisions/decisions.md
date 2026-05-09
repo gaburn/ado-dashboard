@@ -71,3 +71,73 @@ Remove all internal identifiers in a single focused session.  Deliver a fully OS
 - `docs/configuration.md`
 - `README.md`
 - `LICENSE` (new — MIT)
+
+
+---
+
+# Decision: Starter Test Suite
+
+**Status:** ✅ Complete  
+**Date:** 2026-01-09  
+**Decider:** Dwalin (Testing Specialist)
+
+## Context
+
+The wip-dashboard repo had zero committed tests. CI was wired up (`.github/workflows/ci.yml` runs `pytest -q` and tolerates exit code 5) but needed a real starter suite to establish coverage and testing patterns.
+
+## Decision
+
+Wrote 79 tests across 6 modules:
+
+1. **`test_config.py`** (20 tests) — 4-layer resolution (CLI → env → file → defaults)
+   - `apply_overrides()` honors namespace attrs, splits comma-separated `projects`, ignores `None`
+   - `load_from_file()` only applies values when env var not set
+   - `pr_url()` and `work_item_url()` build expected URLs
+   - Autouse fixture resets module state between tests
+
+2. **`test_investigation.py`** (13 tests) — InvestigationLauncher adapter
+   - `NoOpLauncher` returns generic prompts, `launch()` returns `(False, error)`
+   - `get_launcher()` returns default when nothing configured
+   - `AgencyLauncher` prompt tests only (launch tests skipped when `agency` not on PATH)
+
+3. **`test_investigation_prompts.py`** (10 tests) — pure prompt builders
+   - `board_key_from_url()` falls back gracefully on malformed URLs
+   - `build_board_investigation_prompt()` / `build_item_investigation_prompt()` produce strings with expected identifiers
+   - `build_ai_triage_prompt()` mentions JSON schema fields (id, category, priority, why, action_plan)
+
+4. **`test_triage_categorizer.py`** (21 tests) — rule-based categorization
+   - Each category branch (Blocking Issue, Bug/Behavior, PR Review, Feature Request, Support Question)
+   - Priority grouping: items with `priority=1..4` land in right bucket
+   - Action plan generation non-empty on non-empty inputs
+   - AI analysis merge preserves valid categories/priorities only
+
+5. **`test_models.py`** (13 tests) — dataclass parsers
+   - `PullRequest`/`WorkItem`/`TriageItem` parse representative ADO dicts
+   - Edge cases: missing `assignedTo`, missing `priority`, HTML in `description`
+   - `TriageAnalysis.from_json` parses AI response
+
+6. **`test_triage_client.py`** (2 tests) — negative tests
+   - When `triage_script_path` config is empty/None, `_resolve_script_path()` raises clear error
+
+## Conventions
+
+- Files in `src/tests/`, one per module, named `test_<module>.py`
+- Pytest fixtures + monkeypatch; avoided heavy `unittest.mock`
+- `pytest.fixture(autouse=True)` to reset module-level state in `config` tests
+- All tests pass on both Windows and Linux (CI runs ubuntu-latest)
+- 79 tests, each <10ms
+- No new dependencies
+
+## Consequences
+
+- **Positive:** Establishes baseline coverage for core modules; CI now fails on regression.
+- **Negative:** Textual screens, `ado_client` async, `session_client` Windows Terminal launcher, `window_focus`, `setup_wizard` remain untested (out of scope).
+
+## Source Surprises
+
+None. All source functions/classes matched expectations.
+
+## Reusable Patterns
+
+- **Autouse fixture for module state reset:** Used in `test_config.py` to reset all module-level globals between tests. Pattern can be reused for any module with module-level state.
+
