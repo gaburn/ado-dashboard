@@ -28,22 +28,21 @@ from textual.widgets import (
     TabPane,
 )
 
-from wip_dashboard import config
-from wip_dashboard import triage_cache
+from wip_dashboard import config, triage_cache
 from wip_dashboard.ado_client import (
     fetch_my_prs,
     fetch_reviewing_prs,
     fetch_work_items_with_hierarchy,
 )
-from wip_dashboard.models import CopilotSession, PullRequest, TriageItem, WorkItem
-from wip_dashboard.triage_categorizer import apply_ai_analysis, categorize_triage_items, generate_action_plan
-from wip_dashboard.triage_client import fetch_triage_items
-from wip_dashboard.session_client import fetch_sessions, launch_investigation, resume_session
 from wip_dashboard.investigation_prompts import (
     build_ai_triage_prompt,
     build_board_investigation_prompt,
     build_item_investigation_prompt,
 )
+from wip_dashboard.models import CopilotSession, PullRequest, TriageItem, WorkItem
+from wip_dashboard.session_client import fetch_sessions, launch_investigation, resume_session
+from wip_dashboard.triage_categorizer import apply_ai_analysis, categorize_triage_items, generate_action_plan
+from wip_dashboard.triage_client import fetch_triage_items
 
 log = logging.getLogger(__name__)
 

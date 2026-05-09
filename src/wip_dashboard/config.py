@@ -17,7 +17,6 @@ import os
 from pathlib import Path
 from typing import Any
 
-
 # ---------------------------------------------------------------------------
 # Defaults  (intentionally empty/generic — the setup wizard fills these in)
 # ---------------------------------------------------------------------------

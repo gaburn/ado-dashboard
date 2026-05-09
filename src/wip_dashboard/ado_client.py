@@ -6,7 +6,6 @@ import asyncio
 import json
 import logging
 import shutil
-from typing import Any
 
 from wip_dashboard import config
 from wip_dashboard.models import PullRequest, WorkItem

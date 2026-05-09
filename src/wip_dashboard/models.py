@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Self
 
 from wip_dashboard import config
@@ -16,7 +16,7 @@ from wip_dashboard import config
 def _parse_ado_date(raw: str | None) -> datetime:
     """Parse an ADO ISO-8601 date string into a timezone-aware datetime."""
     if not raw:
-        return datetime.now(tz=timezone.utc)
+        return datetime.now(tz=UTC)
     # ADO dates look like "2024-06-15T10:23:45.1234567Z" — Python needs at
     # most 6 fractional digits, so truncate.
     cleaned = raw.rstrip("Z")
@@ -28,7 +28,7 @@ def _parse_ado_date(raw: str | None) -> datetime:
 
 def _human_age(dt: datetime) -> str:
     """Return a compact, human-readable age string like '2d', '1w', '3h'."""
-    delta = datetime.now(tz=timezone.utc) - dt
+    delta = datetime.now(tz=UTC) - dt
     total_seconds = int(delta.total_seconds())
     if total_seconds < 0:
         return "0m"
@@ -570,7 +570,7 @@ class CopilotSession:
         """Status indicator: 🟢 active, ⚪ updated <24 h, 🔴 stale."""
         if self.is_active:
             return "🟢"
-        delta = datetime.now(tz=timezone.utc) - self.updated_at
+        delta = datetime.now(tz=UTC) - self.updated_at
         if delta.total_seconds() < 86_400:
             return "⚪"
         return "🔴"
