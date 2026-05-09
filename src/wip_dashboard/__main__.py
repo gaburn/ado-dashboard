@@ -49,13 +49,13 @@ def main() -> None:
     """Launch the WIP Dashboard TUI application."""
     args = _parse_args()
 
+    from wip_dashboard import config
     from wip_dashboard.setup_wizard import (
         config_file_exists,
         load_config,
         run_setup,
         save_config,
     )
-    from wip_dashboard import config
 
     # Run setup wizard if requested or if no config file exists yet.
     if args.setup or not config_file_exists():

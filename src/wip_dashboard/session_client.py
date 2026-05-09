@@ -7,7 +7,7 @@ import json
 import logging
 import shutil
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from wip_dashboard import config
@@ -43,7 +43,7 @@ async def fetch_sessions() -> list[CopilotSession]:
         return []
 
     max_age_secs = config.SESSION_MAX_AGE_DAYS * 86_400
-    now_ts = datetime.now(tz=timezone.utc).timestamp()
+    now_ts = datetime.now(tz=UTC).timestamp()
 
     sessions: list[CopilotSession] = []
     for entry in entries:
@@ -318,7 +318,7 @@ def _parse_yaml_datetime(raw: str) -> datetime:
     Falls back to *now (UTC)* when the string is empty or unparseable.
     """
     if not raw:
-        return datetime.now(tz=timezone.utc)
+        return datetime.now(tz=UTC)
     try:
         cleaned = raw.rstrip("Z")
         # Truncate fractional seconds to 6 digits (Python max).
@@ -331,7 +331,7 @@ def _parse_yaml_datetime(raw: str) -> datetime:
             cleaned = f"{cleaned}+00:00"
         return datetime.fromisoformat(cleaned)
     except (ValueError, IndexError):
-        return datetime.now(tz=timezone.utc)
+        return datetime.now(tz=UTC)
 
 
 def _parse_events(events_file: Path) -> tuple[int, str, str]:

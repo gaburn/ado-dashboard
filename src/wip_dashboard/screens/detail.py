@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import re
 import webbrowser
-from typing import Generator
+from collections.abc import Generator
 
 from textual import work
 from textual.app import ComposeResult
@@ -14,12 +14,12 @@ from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
+from wip_dashboard import config
 from wip_dashboard.ado_client import (
     ADOClientError,
     fetch_pr_detail,
     fetch_work_item_detail,
 )
-from wip_dashboard import config
 from wip_dashboard.models import CopilotSession, PullRequest, TriageItem, WorkItem
 from wip_dashboard.session_client import resume_session
 

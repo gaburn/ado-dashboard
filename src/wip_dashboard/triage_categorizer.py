@@ -6,7 +6,6 @@ import re
 
 from wip_dashboard.models import TriageAnalysis, TriageItem
 
-
 # ---------------------------------------------------------------------------
 # Category keywords (compiled once)
 # ---------------------------------------------------------------------------
@@ -153,7 +152,7 @@ def generate_action_plan(groups: dict[int, list[TriageItem]]) -> str:
         doc_prs = [it for it in pr_items if "doc" in (it.title + (it.description or "")).lower()]
         suffix = ""
         if doc_prs:
-            suffix = f" (docs PRs are quick wins)"
+            suffix = " (docs PRs are quick wins)"
         lines.append(f"• Batch PR reviews — {len(pr_items)} PRs: {', '.join(parts)}{suffix}")
 
     # --- Line 3: support questions ---
