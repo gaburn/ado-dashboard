@@ -141,3 +141,45 @@ None. All source functions/classes matched expectations.
 
 - **Autouse fixture for module state reset:** Used in `test_config.py` to reset all module-level globals between tests. Pattern can be reused for any module with module-level state.
 
+---
+
+# Decision: Rename app from `wip-dashboard` to `ado-dashboard`
+
+**Date:** 2026-05-25  
+**By:** Copilot (user: Copilot)  
+**Status:** Accepted
+
+## Context
+
+After two naming brainstorms exploring mythic/mining metaphors (adit, forge, mithril) and WIP/flow concepts (standup, porch, queue, carry, bench), the user chose a literal, functional name.
+
+## Decision
+
+Rename `wip-dashboard` → `ado-dashboard` across package, CLI, documentation, and configuration.
+
+## Rationale
+
+`ado-dashboard` is honest about what the app does — it's a dashboard for Azure DevOps. Discoverable by anyone searching for "ADO" + "dashboard" without requiring a metaphor to decode. Clear, functional, memorable.
+
+## Rejected candidates
+
+adit, forge, mithril, standup, porch, wip, carry, bench, slate, draft, flux, deck, thread, live, hum, tally, devdesk, queue, scope, dock.
+
+## Scope
+
+- `pyproject.toml` — package name, project name, CLI entry point
+- `src/wip_dashboard/` → `src/ado_dashboard/` (all 22 files)
+- All Python imports (16 production + 6 test files)
+- User-visible strings (log filenames, config dir defaults, prog name)
+- `.squad/team.md` project context
+- `README.md`, `CONTRIBUTING.md`, all `docs/*.md` files
+- Directory rename (repo root coordination separate)
+
+## Execution
+
+**Thorin (2025-07-17):** Code/package scope complete. 22 source files renamed; pyproject.toml, imports, string literals updated; py_compile verified; 6 test files updated.
+
+**Bofur (2026-07-17):** Documentation complete. README, CONTRIBUTING, 8 doc files updated with new name/paths/examples.
+
+Follow-up flags: GitHub repo rename pending; env var name check (`WIP_DASHBOARD_REPO_ROOT` → `ADO_DASHBOARD_REPO_ROOT`); `.github/ISSUE_TEMPLATE/bug_report.md` contains user-facing references; GitHub URLs in `CODE_OF_CONDUCT.md` and `SECURITY.md` need update post-rename.
+
