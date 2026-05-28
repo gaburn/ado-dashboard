@@ -59,10 +59,11 @@ representative at an online or offline event.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement.
-To report a Code of Conduct violation, please use GitHub's private vulnerability reporting at
-https://github.com/gaburn/ado-dashboard/security/advisories/new (it works for conduct reports too)
-or email <maintainer@example.com>. <!-- TODO: replace with maintainer email before public launch -->
+reported to the project maintainers privately via GitHub's [private
+vulnerability reporting](https://github.com/gaburn/ado-dashboard/security/advisories/new)
+form. The same channel is used for security reports — it sends a confidential
+notification only to repository maintainers and is the preferred way to flag a
+Code of Conduct violation.
 
 All complaints will be reviewed and investigated promptly and fairly.
 
