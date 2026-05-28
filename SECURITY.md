@@ -6,7 +6,7 @@ We take the security of this project seriously. If you discover a security vulne
 
 **Please use GitHub's private vulnerability reporting feature:**
 
-👉 [Report a vulnerability](https://github.com/gaburn/wip-dashboard/security/advisories/new)
+👉 [Report a vulnerability](https://github.com/gaburn/ado-dashboard/security/advisories/new)
 
 **Do NOT open a public issue for security vulnerabilities.**
 
@@ -42,10 +42,10 @@ The following are generally **not** considered security issues:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| Current major | ✅ Yes |
+| Latest release (0.x) | ✅ Yes |
 | Older versions | ❌ No |
 
-Only the current major version receives security updates. We recommend always using the latest release.
+Only the latest release receives security updates. We recommend always using the latest release.
 
 ## Disclosure Policy
 

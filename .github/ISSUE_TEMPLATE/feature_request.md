@@ -6,6 +6,10 @@ labels: enhancement
 assignees: gaburn
 ---
 
+## What workflow does this support?
+
+Which part of your day does this improve? (e.g., reviewing PRs, triaging work items, managing Copilot sessions, configuration)
+
 ## Is your feature request related to a problem?
 
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]

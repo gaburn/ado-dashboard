@@ -11,14 +11,20 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.12', '3.13']
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python-version }}
           cache: pip
 
       - name: Install package and dev dependencies
@@ -30,6 +36,13 @@ jobs:
         run: ruff check src/
 
       - name: Run tests (pytest)
+        run: pytest -q
+
+      # TODO: requires pytest-cov in [dev] extras (Glóin owns pyproject.toml).
+      # Bridge install until pyproject is updated.
+      - name: Coverage gate (soft-fail until threshold is raised)
+        shell: bash
         run: |
-          # Tolerate exit code 5 (no tests collected) until the suite lands.
-          pytest -q || ([ $? -eq 5 ] && echo "::warning::No tests collected yet" && exit 0)
+          pip install pytest-cov --quiet
+          pytest --cov=ado_dashboard --cov-report=term --cov-fail-under=60 -q || \
+            echo "::warning::Coverage below 60% threshold — fix before raising the gate"

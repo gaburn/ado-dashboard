@@ -14,8 +14,8 @@ Thanks for your interest in contributing! ADO Dashboard is a Textual TUI for man
 ### Setup
 
 ```bash
-git clone https://github.com/gaburn/wip-dashboard.git
-cd wip-dashboard
+git clone https://github.com/gaburn/ado-dashboard.git
+cd ado-dashboard
 pip install -e ".[dev]"
 ado-dashboard
 ```
@@ -46,6 +46,10 @@ src/tests/              # pytest suite
 docs/                   # Architecture, configuration, integration, development docs
 ```
 
+### AI Tooling (`.squad/`)
+
+This project uses an AI development team (the Squad). You'll see `.squad/` with agent charters, decisions, and history — these are the maintainer's tooling, kept in the repo for transparency. You don't need to touch them to contribute.
+
 ### Scripts
 
 | Command | Description |
@@ -65,10 +69,27 @@ docs/                   # Architecture, configuration, integration, development 
 ## Making Changes
 
 1. **Fork** the repository
-2. **Create a branch** for your change (`git checkout -b my-feature`)
+2. **Create a branch** for your change (see Branch Naming below)
 3. **Make your changes** — keep commits focused and descriptive
 4. **Test locally** — run `pytest` and `ruff check src/`
 5. **Submit a pull request** with a clear description of what changed and why
+
+### Commit Messages
+
+Use imperative mood (e.g., `fix bug` not `fixed bug`). Conventional Commits are encouraged but not required.
+
+### Branch Naming
+
+| Prefix | Example |
+|---|---|
+| `feat/` | `feat/add-sorting` |
+| `fix/` | `fix/pr-filter` |
+| `docs/` | `docs/readme-update` |
+| `chore/` | `chore/bump-deps` |
+
+### Pre-commit Hooks
+
+Install pre-commit hooks: `pre-commit install`
 
 ### Code Style
 
@@ -83,7 +104,7 @@ See [`docs/architecture.md`](./docs/architecture.md) for the module map, async/w
 
 ## Reporting Issues
 
-Use [GitHub Issues](https://github.com/gaburn/wip-dashboard/issues) to report bugs or request features. Include:
+Use [GitHub Issues](https://github.com/gaburn/ado-dashboard/issues) to report bugs or request features. Include:
 
 - What you expected to happen
 - What actually happened

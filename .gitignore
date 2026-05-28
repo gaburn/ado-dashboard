@@ -4,6 +4,12 @@
 .squad/decisions/inbox/
 .squad/sessions/
 .squad/.scratch/
+.squad/casting/
+.squad/templates/
+.squad/skills/
+.squad/plugins/
+.squad/identity/
+.squad/.first-run
 # Squad: SubSquad activation file (local to this machine)
 .squad-workstream
 
@@ -12,14 +18,21 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
+.ruff_cache/
 build/
 dist/
 
 # Runtime logs and local state (must never be committed — may contain
 # user emails, internal project names, work item IDs, session UUIDs)
 *.log
+*.tmp
+*.bak
 .copilot/
-~/.wip-dashboard/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
 
 # Squad framework lives only on the dev branch — keep it out of main
 # even if a careless merge brings it in.

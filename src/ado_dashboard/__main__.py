@@ -6,6 +6,8 @@ import argparse
 import logging
 from pathlib import Path
 
+import platformdirs
+
 
 def _parse_args() -> argparse.Namespace:
     """Build and parse CLI arguments."""
@@ -37,6 +39,15 @@ def _parse_args() -> argparse.Namespace:
         help="Comma-separated list of ADO projects for PR queries",
     )
     parser.add_argument(
+        "--demo",
+        action="store_true",
+        default=False,
+        help=(
+            "Run in demo mode with fictional fixture data — no Azure DevOps "
+            "setup or authentication required. Great for screenshots."
+        ),
+    )
+    parser.add_argument(
         "--user",
         dest="user_email",
         default=None,
@@ -50,6 +61,26 @@ def main() -> None:
     args = _parse_args()
 
     from ado_dashboard import config
+
+    # Activate demo mode if --demo flag or ADO_DASHBOARD_DEMO env var is set.
+    if getattr(args, "demo", False):
+        config.DEMO_MODE = True
+
+    if config.DEMO_MODE:
+        # Demo mode: skip setup wizard and config loading entirely.
+        log_dir = Path(platformdirs.user_log_path("ado-dashboard"))
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_file = log_dir / "ado-dashboard.log"
+        file_handler = logging.FileHandler(log_file, mode="w", encoding="utf-8")
+        file_handler.setFormatter(
+            logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
+        )
+        logging.getLogger("ado_dashboard").setLevel(logging.DEBUG)
+        logging.getLogger("ado_dashboard").addHandler(file_handler)
+        from ado_dashboard.app import WipDashboardApp
+        WipDashboardApp().run()
+        return
+
     from ado_dashboard.setup_wizard import (
         config_file_exists,
         load_config,
@@ -74,7 +105,9 @@ def main() -> None:
     config.apply_overrides(args)
 
     # File logging for debugging window-focus and session issues.
-    log_file = Path(__file__).resolve().parent.parent.parent / "ado-dashboard.log"
+    log_dir = Path(platformdirs.user_log_path("ado-dashboard"))
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / "ado-dashboard.log"
     file_handler = logging.FileHandler(log_file, mode="w", encoding="utf-8")
     file_handler.setFormatter(
         logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")

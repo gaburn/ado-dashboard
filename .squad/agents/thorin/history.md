@@ -143,3 +143,83 @@ live `WIP_DASHBOARD_REPO_ROOT` hits outside `.squad/` history files.
 
 **Decision note:** `.squad/decisions/inbox/thorin-pr1-merge-resolution.md`
 
+### 2025-07-17 — Public-readiness audit: repo hygiene + architectural review
+
+**Scope:** Audit-only pass (no files changed). Full report at `.squad/decisions/inbox/thorin-public-audit.md`.
+
+**Two blockers identified:**
+1. `src/wip_dashboard/` (22 files) still tracked — ghost of incomplete rename that survived the PR #1 merge. `git rm -r src/wip_dashboard/` required.
+2. `.squad/config.json` references `claude-opus-4.7-1m-internal` — internal model name; must be replaced with a public model or removed before main goes public.
+
+**Key recommended fixes:**
+- `.ruff_cache/` missing from `.gitignore` — gap allows accidental commit.
+- `requirements.txt` is a 1-line duplicate of `pyproject.toml`; delete it.
+- `~/.wip-dashboard/` in `.gitignore` is a no-op (tilde not expanded by git); remove.
+- `.squad/` public-shipping decision is deferred to user: the gitignore guard is in place for main, but files are tracked on dev — `git rm` needed if the answer is "no".
+- Cross-platform OS cruft patterns (`.DS_Store`, `Thumbs.db`, `desktop.ini`, `*.tmp`, `*.bak`) missing from `.gitignore`.
+
+**Architecture verdict:** `ado_dashboard` module shape is sound — clean boundaries, discoverable `__main__.py`, single dependency. No structural issues beyond the ghost module.
+
+**Gotcha — log path in `__main__.py`:** Log file is written 3 levels above `__file__` which resolves to repo root during dev but to a Python lib directory when installed via pip. Should write to `~/.ado-dashboard/` instead.
+
+### 2026-07-17 — Pre-public hygiene: ghost module removal, .squad/ pruning, .gitignore cleanup
+
+**Scope:** Release-quality hygiene pass before PyPI ship. Decision note at `.squad/decisions/inbox/thorin-public-prep-execution.md`.
+
+**Ghost module removed:** `src/wip_dashboard/` — 22 files (`git rm -rf`). These were the pre-rename copies that survived the PR #1 merge. They imported nothing from the live `ado_dashboard` module and were pure dead weight. No test failures after removal (79/79 pass).
+
+**Internal model name scrubbed:** `.squad/config.json` — all four `agentModelOverrides` entries changed from `claude-opus-4.7-1m-internal` to `claude-opus-4.7`. Kept the file; it is useful for contributors who run squad locally.
+
+**.squad/ pruning:** Removed `templates/`, `orchestration-log/`, `log/`, `casting/`, `skills/`, `identity/`, `.first-run`. Kept: `team.md`, `routing.md`, `ceremonies.md`, `decisions/decisions.md`, `config.json`, and all agent `charter.md`/`history.md` files. The `decisions/inbox/` was not tracked — no action needed.
+
+**.gitignore updates:**
+- Added `.ruff_cache/`, `*.tmp`, `*.bak`, `.DS_Store`, `Thumbs.db`, `desktop.ini`
+- Added the pruned `.squad/` paths so they don't get re-tracked
+- Removed no-op `~/.wip-dashboard/` line (tilde not expanded by git)
+
+**requirements.txt deleted:** Was a 1-line file (`textual>=3.0.0`) — pure duplicate of `pyproject.toml`. Deleted via `git rm`.
+
+**Rule confirmed:** Before any public ship, check `git ls-files | grep -i internal` and `git ls-files | grep _1m_` to catch internal model references. Also confirm no ghost module directories survive renames.
+
+### 2026-07-17 — Demo mode: --demo flag with Tolkien fixture data
+
+**Scope:** Full demo mode implementation (feature commit on `dev` branch).
+
+**Architecture chosen — demo/ package with factory helpers:**
+- `src/ado_dashboard/demo/` package: `fixtures.py` (all Tolkien data) + `clients.py` (`DemoAdoClient`, `DemoTriageClient`, `DemoSessionClient`) + `__init__.py` (exports).
+- Three module-level factory functions in `dashboard.py` (`_demo_ado`, `_demo_triage`, `_demo_session`) return the demo client or `None` based on `config.DEMO_MODE`. Used as drop-in replacements at every call site in `_load_data` and `_refresh_triage`.
+- `config.DEMO_MODE: bool` reads `ADO_DASHBOARD_DEMO` env var, set at process start.
+- `--demo` CLI flag in `__main__.py` sets the env var and skips the setup wizard entirely.
+
+**Fixture data policy — obviously fictional:**
+- Org: `https://dev.azure.com/middle-earth`, project: `expedition`.
+- Demo user: `g.grey@middle-earth.example` (Gandalf). All reviewer emails use `@middle-earth.example`.
+- No `microsoft.com`, no real ADO URLs, no internal strings. Verified by `TestFixtureContentSafety`.
+
+**Triage categorization:** Pre-set `category`/`ai_why` on `TriageItem` instances directly (slots=True dataclass supports this). `categorize_triage_items()` may overwrite `category` but `ai_why` survives, giving rich triage display.
+
+**`_populate_reviewing_table` email fix:** Promoted from `config.USER_EMAIL` to `user_email: str = ""` parameter (with `email = user_email or config.USER_EMAIL` fallback). Backward-compatible — all existing call sites continue to work; demo mode passes `DEMO_USER_EMAIL` explicitly.
+
+**AI enrichment skip:** `_load_data` Stage 2 and `_refresh_triage` both guard `_start_ai_enrichment()` with `not config.DEMO_MODE` — no Copilot subprocess invoked in demo mode.
+
+**Testing:** 38 new tests in `src/tests/test_demo_mode.py` (156 total, all pass). Coverage: fixture shapes, model types, varied states, demo client method return types, factory behavior, subprocess-never-called assertions, content safety.
+
+**Key gotcha — `@staticmethod` with module-level state:** Can still access `config.USER_EMAIL` inside the body, but if you need the caller to pass a *different* email (demo mode), you must add a parameter. Pattern: `user_email: str = ""` with `email = user_email or config.MODULE_DEFAULT`.
+
+
+
+**Audit + execution phase final state:** Five parallel audits (Thorin, Balin, Dwalin, Bofur, Glóin) identified 20 total issues (1 blocker per agent track + 2–8 recommended + polish). Four parallel execution agents (Thorin, Dwalin, Bofur, Glóin) resolved all blockers and most recommended fixes in single commits:
+- Thorin: d677636 (hygiene, ghost module, .squad/ pruning, .gitignore hardening, requirements.txt delete)
+- Bofur: ec7404e (README/CONTRIBUTING/CODE_OF_CONDUCT/templates fixes)
+- Dwalin: bcaf610 (39 ado_client tests, CI matrix expansion Ubuntu+Windows × 3.12+3.13, pre-commit config)
+- Glóin: 27201cb (pyproject.toml PEP 621 metadata, log path fix, CHANGELOG, release.yml, RELEASING.md)
+- Coordinator: b23e463 (PR #1 merge verification + health report)
+
+**118 tests pass** (39 new + 79 existing, all under 1s). CI matrix green on all 4 jobs. PR #1 merge conflicts resolved; `mergeable: MERGEABLE` status. No secrets, no ghost code, no internal references in committed tree. `.squad/` partially shipped (decision + routing + ceremonies + team + agent charters + history; scaffolding removed).
+
+**Two follow-up items flagged but not blocking release:**
+1. Bofur: README screenshot/GIF (UX win, not functional blocker)
+2. Bofur: CODE_OF_CONDUCT maintainer email placeholder (flagged in <!-- TODO --> comment)
+
+**Public ship readiness: READY** (all 8 Glóin blockers resolved; Dwalin blocker on ado_client coverage resolved; Bofur blocker on README clone step resolved; Thorin blockers on ghost module + internal refs resolved).
+

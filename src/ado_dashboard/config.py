@@ -18,6 +18,12 @@ from pathlib import Path
 from typing import Any
 
 # ---------------------------------------------------------------------------
+# Demo mode — set by --demo CLI flag or ADO_DASHBOARD_DEMO=1 env var.
+# When True, all data is served from fictional fixture data (no ADO calls).
+# ---------------------------------------------------------------------------
+DEMO_MODE: bool = os.environ.get("ADO_DASHBOARD_DEMO", "").strip() in ("1", "true", "yes")
+
+# ---------------------------------------------------------------------------
 # Defaults  (intentionally empty/generic — the setup wizard fills these in)
 # ---------------------------------------------------------------------------
 _DEFAULT_ORG_URL = ""
@@ -47,7 +53,8 @@ def _resolve_repo_root() -> str:
     val = os.environ.get("WIP_DASHBOARD_REPO_ROOT")
     if val:
         warnings.warn(
-            "WIP_DASHBOARD_REPO_ROOT is deprecated; rename to ADO_DASHBOARD_REPO_ROOT.",
+            "WIP_DASHBOARD_REPO_ROOT is deprecated; rename to ADO_DASHBOARD_REPO_ROOT."
+            " This fallback will be removed in v0.4.0.",
             DeprecationWarning,
             stacklevel=2,
         )

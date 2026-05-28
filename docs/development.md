@@ -6,7 +6,7 @@
 
 ```bash
 # Clone and install in editable mode (requires Python 3.12+)
-cd wip-dashboard
+cd ado-dashboard
 pip install -e .
 
 # First run — triggers the setup wizard
