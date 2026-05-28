@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-28
+
 ### Added
 - **Demo mode** (`--demo` flag / `ADO_DASHBOARD_DEMO=1` env var): bypasses all Azure DevOps calls and renders every tab with fictional Tolkien-themed fixture data. Ideal for screenshots, presentations, and onboarding without exposing real org/project data. A `🎭 DEMO MODE` banner appears in the status bar and app subtitle.
 - **README screenshots** — hero image plus per-tab gallery captured in demo mode, stored under `docs/screenshots/`.
+- **CI guard** (`guard-no-squad-on-main`) — fails any push or PR that introduces Squad framework files onto `main`.
+
+### Changed
+- **Public-readiness sweep:** LICENSE attribution, CONTRIBUTING/SECURITY/CODE_OF_CONDUCT polish, packaging metadata, pre-commit config, release workflow with PyPI Trusted Publishing.
+- **Code of Conduct enforcement reports** now route through GitHub private security advisories instead of a maintainer email address.
 
 ## [0.2.1] - 2026-01-01
 
