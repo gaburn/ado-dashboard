@@ -75,6 +75,7 @@ class DetailScreen(Screen):
     BINDINGS = [
         Binding("escape", "go_back", "Back", priority=True),
         Binding("o", "open_browser", "Open in browser"),
+        Binding("e", "edit", "Edit"),
         Binding("f", "focus_terminal", "Focus Terminal"),
         Binding("R", "resume_session", "Resume Session"),
     ]
@@ -348,6 +349,23 @@ class DetailScreen(Screen):
         """Open the item's ADO page in the default browser."""
         webbrowser.open(self._item.url)
         self.notify(f"Opened #{self._item.id} in browser")
+
+    def action_edit(self) -> None:
+        """Push the EditWorkItemScreen for a WorkItem; refresh on success."""
+        if not isinstance(self._item, WorkItem):
+            return
+        if config.DEMO_MODE:
+            self.notify(
+                "Editing is disabled in demo mode.", severity="information"
+            )
+            return
+        from ado_dashboard.screens.edit import EditWorkItemScreen
+
+        def _on_result(result: bool | None) -> None:
+            if result:
+                self._fetch_detail()
+
+        self.app.push_screen(EditWorkItemScreen(self._item), _on_result)
 
     def action_focus_terminal(self) -> None:
         """Switch focus to the terminal running this session."""
