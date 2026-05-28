@@ -64,5 +64,42 @@
 
 **Gotcha — Textual Select widget:** Requires at least one item. When `get_launcher().discover_models()` returns `[]`, settings.py returns `[("No backend configured", "")]` as placeholder.
 
-**Gotcha — board validation:** Removed the `len(boards) == 0` guard that previously blocked saving settings. New OSS users can't configure boards before saving other settings.
+### 2025-07-17 — App rename: wip-dashboard → ado-dashboard
+
+**Scope:** Code, package, and build surfaces only. Docs/README handled separately by Bofur.
+
+**Changes made:**
+- `src/wip_dashboard/` directory renamed to `src/ado_dashboard/` via `git mv` (history preserved).
+- `pyproject.toml`: `name`, `[project.scripts]` entry key and module path, `[tool.hatch.build.targets.wheel] packages` all updated.
+- All `wip_dashboard` import references in 16 production files + 6 test files updated to `ado_dashboard`.
+- User-visible string literals updated in `.py` files:
+  - `__main__.py`: docstring, `prog=`, help text print, log file path (`wip-dashboard.log` → `ado-dashboard.log`)
+  - `setup_wizard.py`: `_APP_NAME` constant (`"wip-dashboard"` → `"ado-dashboard"`)
+  - `config.py`: two default path defaults (`~/.wip-dashboard/...` → `~/.ado-dashboard/...`)
+  - `investigation.py`: module docstring and temp dir name
+- `.squad/team.md`: project title and Project Context line updated.
+
+**Intentionally left alone:** history entries in `.squad/agents/*/history.md`, `.squad/decisions/decisions.md`, `.github/ISSUE_TEMPLATE/`, `CONTRIBUTING.md`, `README.md`, `docs/*.md` (Bofur's scope). The old `wip-dashboard.log` file at repo root if it exists (incidental artifact).
+
+**Verification:** `python -m py_compile` on all 12 production files and 6 test files — all passed. Zero `wip_dashboard`/`wip-dashboard` hits remaining in `src/` or `pyproject.toml`.
+
+### 2026-07-17 — Env var rename: WIP_DASHBOARD_REPO_ROOT → ADO_DASHBOARD_REPO_ROOT
+
+**Scope:** Follow-up from app rename. Three live references found — `config.py`,
+`README.md`, `docs/configuration.md`. `.squad/` history entries left alone.
+
+**Note:** `config.py` also carried a stale intermediate name `ado_dashboard_REPO_ROOT`
+(lowercase) from the prior pass — corrected to `ADO_DASHBOARD_REPO_ROOT` in the same edit.
+
+**Backward compat:** Implemented. `WIP_DASHBOARD_REPO_ROOT` still read as deprecated
+fallback (`warnings.warn(DeprecationWarning)`). ~10 lines, low risk.
+
+**Verification:** `py_compile` on `config.py` — passed. Re-grep confirmed zero
+live `WIP_DASHBOARD_REPO_ROOT` hits outside `.squad/` history files.
+
+**Decision note:** `.squad/decisions/inbox/thorin-env-var-rename.md`
+
+### 2026-05-28 — Config: Org URL normalization now handled at load time
+
+**Note:** Setup wizard was saving bare organization names instead of full Azure DevOps URIs. Balin added `_normalize_org_url()` helper to `config.py` (applied in `load_from_file` and `apply_overrides`), and patched the wizard to normalize at prompt time. This is now a config layer concern — all org inputs should flow through normalization.
 
