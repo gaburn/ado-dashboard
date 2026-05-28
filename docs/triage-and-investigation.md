@@ -87,7 +87,7 @@ Urgency rank = `base_score[priority] + min(age_days, 90)`, where base scores are
 When `config.AI_TRIAGE_MODE == "copilot"` (default), the dashboard attempts AI enrichment after the rule-based pass:
 
 1. **Cache check** — `triage_cache.is_cache_fresh(board_url)`: if the cache file exists and is < `TRIAGE_CACHE_MAX_AGE_SECONDS` (default 1800s), apply it immediately.
-2. **Launch** — the configured `InvestigationLauncher.launch(prompt, ...)` is called.  With the default `NoOpLauncher`, AI enrichment will be skipped (the launcher returns failure).  Configure an `AgencyLauncher` or custom backend to enable it — see `docs/investigation.md`.
+2. **Launch** — the configured `InvestigationLauncher.launch(prompt, ...)` is called.  With the default `NoOpLauncher`, AI enrichment will be skipped (the launcher returns failure).  Configure a custom backend to enable it — see `docs/investigation.md`.
 3. **Poll** — `set_interval(4, _poll_copilot_triage)` checks `cache_mtime > launch_time` every 4 seconds.
 4. **Apply** — `apply_ai_analysis(items, analysis)` merges AI-assigned `category`, `ai_priority`, and `ai_why` into items in place, then rebuilds priority groups.
 5. **Timeout** — after 5 minutes the poll timer stops and the rule-based results remain.

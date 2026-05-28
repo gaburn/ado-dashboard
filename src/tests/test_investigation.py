@@ -1,7 +1,5 @@
 """Tests for ado_dashboard.investigation — launcher adapter interface."""
 
-import pytest
-
 from ado_dashboard import investigation
 
 
@@ -87,44 +85,3 @@ def test_set_launcher_replaces_default():
     investigation.set_launcher(custom)
     launcher = investigation.get_launcher()
     assert launcher is custom
-
-
-@pytest.mark.skipif(
-    not investigation.shutil.which("agency"),
-    reason="agency CLI not on PATH",
-)
-def test_agency_launcher_board_prompt():
-    """AgencyLauncher.build_board_prompt mentions triage and prioritization."""
-    launcher = investigation.AgencyLauncher()
-    prompt = launcher.build_board_prompt(
-        "https://dev.azure.com/org/proj/_boards/board/t/team", "My Board"
-    )
-    assert "My Board" in prompt
-    assert "triage" in prompt.lower() or "investigate" in prompt.lower()
-
-
-@pytest.mark.skipif(
-    not investigation.shutil.which("agency"),
-    reason="agency CLI not on PATH",
-)
-def test_agency_launcher_item_prompt_basic():
-    """AgencyLauncher.build_item_prompt returns a basic prompt."""
-    launcher = investigation.AgencyLauncher()
-    prompt = launcher.build_item_prompt(123, "My Item", "https://example.com/board")
-    assert "123" in prompt
-    assert "My Item" in prompt
-
-
-@pytest.mark.skipif(
-    not investigation.shutil.which("agency"),
-    reason="agency CLI not on PATH",
-)
-def test_agency_launcher_ai_triage_prompt():
-    """AgencyLauncher.build_ai_triage_prompt includes JSON schema."""
-    launcher = investigation.AgencyLauncher()
-    prompt = launcher.build_ai_triage_prompt(
-        "https://example.com/board", "/tmp/output.json"
-    )
-    assert "https://example.com/board" in prompt
-    assert "/tmp/output.json" in prompt
-    assert "JSON" in prompt

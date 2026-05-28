@@ -172,7 +172,7 @@ See [docs/architecture.md](docs/architecture.md) for module map and async model.
 | [`docs/architecture.md`](docs/architecture.md) | Module map, dependency diagram, async model, screen lifecycle, state ownership |
 | [`docs/ado-integration.md`](docs/ado-integration.md) | `az` command shapes, auth assumptions, error handling, JSON mapping |
 | [`docs/triage-and-investigation.md`](docs/triage-and-investigation.md) | PowerShell script contract, categorizer pipeline, AI enrichment, investigation launcher |
-| [`docs/investigation.md`](docs/investigation.md) | Pluggable InvestigationLauncher adapter: NoOpLauncher, AgencyLauncher, custom backends |
+| [`docs/investigation.md`](docs/investigation.md) | Pluggable InvestigationLauncher adapter: NoOpLauncher + custom backends |
 | [`docs/configuration.md`](docs/configuration.md) | Full 4-layer resolution, config schema, setup wizard, in-app settings |
 | [`docs/development.md`](docs/development.md) | Running locally, tests, adding a tab, adding a settings field, CSS conventions, known cruft |
 

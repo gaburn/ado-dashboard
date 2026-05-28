@@ -68,27 +68,6 @@ Call `set_launcher()` once before the Textual app runs — for example in a `pyp
 
 ---
 
-## AgencyLauncher (Microsoft-internal example)
-
-`ado_dashboard.investigation.AgencyLauncher` is a concrete implementation for teams that use the `agency` CLI tool.  It is included in the source as a reference implementation.
-
-**Requirements:**
-- `agency` on `PATH`
-- Windows Terminal (`wt.exe`) on `PATH`
-
-**Behaviour:**
-- Writes the prompt to a temp file, then opens a new Windows Terminal tab running `agency copilot --yolo [-i prompt.txt]`.
-- `discover_models` shells out to `agency copilot --list-models` to populate the Settings dropdown.
-- `discover_agents` shells out to `agency copilot --list-agents`.
-
-To activate it:
-```python
-from ado_dashboard.investigation import AgencyLauncher, set_launcher
-set_launcher(AgencyLauncher())
-```
-
----
-
 ## Protocol Reference
 
 ```python
