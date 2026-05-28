@@ -253,3 +253,199 @@ Files where main's version had a distinct improvement dev lacked:
 - PR #1: `mergeable: MERGEABLE`
 - Pushed: `dev` at `57a753b`
 
+
+
+---
+
+# Demo Mode Architecture Decision
+
+**Date:** 2026-07-17  
+**Author:** Thorin (architecture agent)  
+**Status:** Implemented  
+**Branch:** dev  
+
+---
+
+## Context
+
+ADO Dashboard requires an authenticated Azure CLI session to load any data. This prevents screenshots, onboarding demos, CI-level UI smoke tests, and presentations without real credentials. We needed a zero-friction way to see the full TUI with realistic data.
+
+## Decision
+
+Add a `--demo` CLI flag (and `ADO_DASHBOARD_DEMO=1` env var) that replaces all real ADO/triage/session clients with local in-memory stub clients backed by a `demo/` package of Tolkien-themed fixture data.
+
+### Structure
+
+```
+src/ado_dashboard/demo/
+  __init__.py        # exports DemoAdoClient, DemoTriageClient, DemoSessionClient
+  fixtures.py        # all Tolkien fixture data + factory functions
+  clients.py         # three async client classes (no subprocess)
+```
+
+### Integration points
+
+| Point | Normal mode | Demo mode |
+|---|---|---|
+| `config.DEMO_MODE` | `False` | `True` |
+| `_demo_ado()` | `None` | `DemoAdoClient()` |
+| `_demo_triage()` | `None` | `DemoTriageClient()` |
+| `_demo_session()` | `None` | `DemoSessionClient()` |
+| `_load_data()` | calls real clients | calls demo clients |
+| `_refresh_triage()` | calls real clients | calls demo clients |
+| `_start_ai_enrichment()` | runs Copilot subprocess | skipped (`not config.DEMO_MODE`) |
+| setup wizard | shown | skipped entirely |
+| app subtitle | version build string | `🎭 DEMO MODE — Fictional data` |
+| status bar | live item counts | same but prefixed with `🎭 DEMO MODE` |
+
+### Fixture data theme: Tolkien / Lord of the Rings
+
+- Org: `https://dev.azure.com/middle-earth`, project: `expedition`
+- Demo user: `g.grey@middle-earth.example` (Gandalf the Grey)
+- All emails: `@middle-earth.example` domain — obviously fictional, zero collision risk with real Microsoft accounts
+- No internal strings, no `microsoft.com`, no real ADO URLs
+
+## Alternatives considered
+
+**Option A: Module-level async functions** — Would require matching exact `ado_client.py` function signatures globally. Rejected: tighter coupling, harder to swap out per call site.
+
+**Option B: Monkeypatching** — Patch `ado_client.*` at import time. Rejected: fragile, obscures what's mocked, breaks if function names change.
+
+**Option C: Environment fixture file** — Load a JSON file. Rejected: adds file dependency, harder to maintain typed data structures.
+
+**Chosen: Option D — Demo client classes** — Clean classes matching real client interfaces. Factory helpers return `None` in normal mode or a demo instance in demo mode. Zero side effects at import time. Easy to test in isolation.
+
+## Consequences
+
+- The `demo/` package is always importable (imported at module load of `dashboard.py`), but has no side effects and adds negligible startup cost.
+- `_populate_reviewing_table` now accepts an optional `user_email: str = ""` parameter (backward-compatible). This is a minor API improvement that helps any future caller needing to pass a non-global email.
+- Triage board selector is hidden in demo mode (no `TRIAGE_BOARD_OPTIONS` configured); triage items still shown via demo client.
+- 38 new tests verify fixture data shapes, client return types, factory behavior, no-subprocess guarantee, and content safety.
+
+
+---
+
+# Decision: Issue #3 — Edit Work Item Fields (Architecture Triage)
+
+**Date:** 2026-07-17
+**Author:** Thorin (lead architect)
+**Issue:** https://github.com/gaburn/ado-dashboard/issues/3
+**Status:** Proposed
+
+---
+
+## Context
+
+Issue #3 requests the ability to edit six work item fields from the TUI:
+Type, Title, State, Iteration Path, Area Path, Description.
+
+This is a four-track feature (API, screen/worker, UX, tests) with non-trivial
+cross-track dependencies. The architecture must be settled before sub-tracks begin.
+
+---
+
+## Decisions
+
+### 1. Primary Owner: Thorin
+
+Architecture-first decomposition. The `EditWorkItemScreen` shape and async save
+worker define the interface that all other tracks build toward.
+
+### 2. Modal Screen, Not Inline Editing
+
+`EditWorkItemScreen` is a full modal `Screen` pushed from the detail view.
+Inline editing on the detail screen is rejected — too high a risk of accidental
+edits while browsing.
+
+**Entry point:** `e` key binding on `detail.py`.
+
+### 3. Widget Composition
+
+| Field | Widget |
+|---|---|
+| Title | `Input` (full-width) |
+| Description | `TextArea` (scrollable) |
+| Type, State, Iteration Path, Area Path | `Select` (dropdown) |
+
+### 4. Async Save Worker Pattern
+
+```python
+@work(exclusive=True)
+async def _save_work_item(self) -> None:
+    ...  # calls ado_client.update_work_item
+    self.post_message(SaveComplete(...))  # or SaveFailed(...)
+```
+
+`exclusive=True` prevents concurrent saves. `SaveFailed` carries a typed error
+union: `ConcurrencyConflictError | ValidationError | ADOClientError`.
+
+### 5. Optimistic Concurrency is Mandatory
+
+The `rev` field from `fetch_work_item_detail` must be passed to `update_work_item`.
+On conflict (stale revision), present a re-fetch-and-retry prompt. Silent
+last-write-wins is not acceptable.
+
+### 6. Dirty-State Reactive
+
+```python
+_dirty: reactive[bool] = reactive(False)
+```
+
+Drives Save button enable/disable. Screen title reflects dirty state.
+`Escape` triggers dirty-check modal when `_dirty` is True.
+
+### 7. Type Change: Spike First, Ship Later
+
+Type change (Bug → User Story) is the riskiest sub-path:
+- May require raw REST PATCH (not `az boards work-item update`) — spike required
+- Silently drops type-specific fields on the target type
+- Requires confirmation dialog + warning copy before submit
+
+**Decision:** Ship Title, State, Iteration Path, Area Path, Description in v1.
+Gate type-change behind a separate issue after the spike.
+
+### 8. Description Field: Plain Text for v1
+
+`System.Description` is HTML in ADO. The edit form accepts plain text for v1.
+Balin to confirm what `az boards work-item update --fields` stores — if it
+accepts plain text and ADO preserves it, no conversion needed.
+
+Markdown support (rendered preview, server-side conversion) is a v2 concern.
+
+### 9. Allowed-Values Fetching
+
+Allowed states are fetched per type from `az boards work-item states list`.
+The State `Select` repopulates when Type changes — async reload mid-form.
+While loading, the State dropdown is disabled with a "Loading…" placeholder.
+
+Iteration Path and Area Path are fetched once at screen open.
+
+### 10. Release Target
+
+`release:backlog` for now. Suggest `release:v0.5.0` for the five-field version
+once sub-issues are scoped and the type-change spike is filed separately.
+
+---
+
+## Sub-issue Plan
+
+| # | Track | Owner | Blocks |
+|---|---|---|---|
+| #3-a | API layer (`ado_client.py` update + allowed-value fetches) | Balin | #3-b, #3-d |
+| #3-b | Edit screen + save worker | Thorin | #3-c, #3-d |
+| #3-c | Edit form UX (layout, bindings, validation feedback) | Bofur | — |
+| #3-d | Tests (unit + Pilot integration) | Dwalin | — |
+| #3-e | Spike: type-change via `az` CLI vs. REST | Balin | type-change gating |
+
+---
+
+## Files Expected to Change
+
+| File | Change |
+|---|---|
+| `src/ado_dashboard/ado_client.py` | Add `update_work_item`, `fetch_allowed_states`, `fetch_iteration_paths`, `fetch_area_paths` |
+| `src/ado_dashboard/models.py` | Add `ConcurrencyConflictError`; extend `WorkItem` if rev field not yet present |
+| `src/ado_dashboard/screens/edit.py` | New: `EditWorkItemScreen`, `SaveComplete`, `SaveFailed` messages |
+| `src/ado_dashboard/screens/detail.py` | Add `e` key binding, push `EditWorkItemScreen`, handle `SaveComplete`/`SaveFailed` |
+| `src/tests/test_edit_screen.py` | New: Dwalin's test file |
+
