@@ -6,6 +6,18 @@ ADO Dashboard is a keyboard-driven terminal dashboard for Azure DevOps (ADO). If
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
+## Demo Mode
+
+Try the dashboard instantly — no ADO credentials, no setup wizard, no real data.
+
+```bash
+ado-dashboard --demo
+# or
+ADO_DASHBOARD_DEMO=1 ado-dashboard
+```
+
+The `--demo` flag populates every tab with fictional Tolkien-themed fixture data (Middle-earth org, Fellowship project, Gandalf the Grey as user). It's perfect for screenshots, presentations, or just exploring the interface before connecting to a real ADO org. No Azure CLI calls are made.
+
 ## Install & Run
 
 <!-- TODO: add screenshot or asciinema GIF here — biggest UX win is showing the TUI in action -->

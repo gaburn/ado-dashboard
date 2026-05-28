@@ -34,6 +34,7 @@ from ado_dashboard.ado_client import (
     fetch_reviewing_prs,
     fetch_work_items_with_hierarchy,
 )
+from ado_dashboard.demo.fixtures import DEMO_USER_EMAIL
 from ado_dashboard.investigation_prompts import (
     build_ai_triage_prompt,
     build_board_investigation_prompt,
@@ -45,6 +46,33 @@ from ado_dashboard.triage_categorizer import apply_ai_analysis, categorize_triag
 from ado_dashboard.triage_client import fetch_triage_items
 
 log = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Demo-mode client helpers
+# ---------------------------------------------------------------------------
+
+def _demo_ado() -> DemoAdoClient | None:  # noqa: F821
+    """Return a demo ADO client when DEMO_MODE is active, else None."""
+    if not config.DEMO_MODE:
+        return None
+    from ado_dashboard.demo.clients import DemoAdoClient
+    return DemoAdoClient()
+
+
+def _demo_triage() -> DemoTriageClient | None:  # noqa: F821
+    """Return a demo triage client when DEMO_MODE is active, else None."""
+    if not config.DEMO_MODE:
+        return None
+    from ado_dashboard.demo.clients import DemoTriageClient
+    return DemoTriageClient()
+
+
+def _demo_session() -> DemoSessionClient | None:  # noqa: F821
+    """Return a demo session client when DEMO_MODE is active, else None."""
+    if not config.DEMO_MODE:
+        return None
+    from ado_dashboard.demo.clients import DemoSessionClient
+    return DemoSessionClient()
 
 
 # ---------------------------------------------------------------------------
@@ -302,8 +330,12 @@ class DashboardScreen(Screen):
             pass
 
         # -- Stage 1: Fetch My PRs first for fast time-to-interactive ------
+        _demo_ado_client = _demo_ado()
         try:
-            my_prs = await fetch_my_prs()
+            if _demo_ado_client:
+                my_prs = await _demo_ado_client.fetch_my_prs()
+            else:
+                my_prs = await fetch_my_prs()
         except Exception as exc:
             log.exception("My PRs fetch failed")
             self.notify(f"Fetch error: {exc}", severity="error", timeout=10, markup=False)
@@ -319,26 +351,33 @@ class DashboardScreen(Screen):
 
         # -- Stage 2: Fetch remaining data in parallel, render as ready ----
         my_pr_ids = {pr.id for pr in my_prs}
+        _demo_email = DEMO_USER_EMAIL if _demo_ado_client else config.USER_EMAIL
 
         async def _fetch_and_populate_reviewing() -> list[PullRequest]:
             try:
-                prs = await fetch_reviewing_prs()
+                if _demo_ado_client:
+                    prs = await _demo_ado_client.fetch_reviewing_prs()
+                else:
+                    prs = await fetch_reviewing_prs()
             except Exception as exc:
                 log.warning("Reviewing PRs fetch failed: %s", exc)
                 self.notify(f"Fetch error: {exc}", severity="error", timeout=10, markup=False)
                 prs = []
             prs = [pr for pr in prs if pr.id not in my_pr_ids]
-            prs = [pr for pr in prs if not pr.has_declined(config.USER_EMAIL)]
+            prs = [pr for pr in prs if not pr.has_declined(_demo_email)]
             self._reviewing_prs = prs
             self._all_reviewing_prs = list(prs)
-            self._populate_reviewing_table(reviewing_table, prs)
+            self._populate_reviewing_table(reviewing_table, prs, _demo_email)
             reviewing_table.loading = False
             self._update_status_bar()
             return prs
 
         async def _fetch_and_populate_work_items() -> list[WorkItem]:
             try:
-                items = await fetch_work_items_with_hierarchy()
+                if _demo_ado_client:
+                    items = await _demo_ado_client.fetch_work_items_with_hierarchy()
+                else:
+                    items = await fetch_work_items_with_hierarchy()
             except Exception as exc:
                 log.warning("Work items fetch failed: %s", exc)
                 self.notify(f"Fetch error: {exc}", severity="error", timeout=10, markup=False)
@@ -352,14 +391,21 @@ class DashboardScreen(Screen):
         async def _fetch_and_populate_triage() -> list[TriageItem]:
             scroll = self.query_one("#triage-scroll", VerticalScroll)
             await scroll.remove_children()
+            _demo_triage_client = _demo_triage()
             board_name = next(
                 (name for name, value in config.TRIAGE_BOARD_OPTIONS if value == self._selected_board),
-                self._selected_board,
+                self._selected_board or ("Fellowship" if _demo_triage_client else "Triage Board"),
             )
             await scroll.mount(Static(f"Loading {board_name}…", classes="triage-empty"))
             await scroll.mount(LoadingIndicator())
 
-            if not config.TRIAGE_SCRIPT_PATH:
+            if _demo_triage_client:
+                try:
+                    items = await _demo_triage_client.fetch_triage_items()
+                except Exception as exc:
+                    log.warning("Demo triage fetch failed: %s", exc)
+                    items = []
+            elif not config.TRIAGE_SCRIPT_PATH:
                 log.info("Triage: no script configured, skipping fetch")
                 items = []
             else:
@@ -385,8 +431,12 @@ class DashboardScreen(Screen):
             return items
 
         async def _fetch_and_populate_sessions() -> list[CopilotSession]:
+            _demo_session_client = _demo_session()
             try:
-                sess = await fetch_sessions()
+                if _demo_session_client:
+                    sess = await _demo_session_client.fetch_sessions()
+                else:
+                    sess = await fetch_sessions()
             except Exception as exc:
                 log.warning("Sessions fetch failed: %s", exc)
                 sess = []
@@ -413,12 +463,12 @@ class DashboardScreen(Screen):
 
         self._update_status_bar()
 
-        # AI enrichment in background
-        if triage_items:
+        # AI enrichment in background — skip in demo mode
+        if triage_items and not config.DEMO_MODE:
             self._start_ai_enrichment()
 
         total = len(my_prs) + len(reviewing_prs) + len(work_items) + len(triage_items) + len(sessions)
-        if total == 0:
+        if total == 0 and not config.DEMO_MODE:
             self.notify("No items found — check your ADO config", severity="warning")
         else:
             log.info(
@@ -561,7 +611,14 @@ class DashboardScreen(Screen):
         await scroll.mount(Static(f"Loading {board_name}…", classes="triage-empty"))
         await scroll.mount(LoadingIndicator())
 
-        if not config.TRIAGE_SCRIPT_PATH:
+        _demo_triage_client = _demo_triage()
+        if _demo_triage_client:
+            try:
+                items = await _demo_triage_client.fetch_triage_items()
+            except Exception as exc:
+                log.warning("Demo triage fetch failed: %s", exc)
+                items = []
+        elif not config.TRIAGE_SCRIPT_PATH:
             log.info("Triage: no script configured, skipping fetch")
             items = []
         else:
@@ -584,8 +641,8 @@ class DashboardScreen(Screen):
         except Exception:
             pass
         self._update_status_bar()
-        # AI enrichment in background
-        if items:
+        # AI enrichment in background — skip in demo mode
+        if items and not config.DEMO_MODE:
             self._start_ai_enrichment()
 
     @staticmethod
@@ -632,12 +689,13 @@ class DashboardScreen(Screen):
 
     @staticmethod
     def _populate_reviewing_table(
-        table: DataTable, prs: list[PullRequest]
+        table: DataTable, prs: list[PullRequest], user_email: str = ""
     ) -> None:
         """Clear and repopulate the Reviewing DataTable with vote indicators."""
         table.clear()
+        email = user_email or config.USER_EMAIL
         for pr in prs:
-            vote = pr.my_vote(config.USER_EMAIL)
+            vote = pr.my_vote(email)
 
             # Determine vote indicator with fixed-width text.
             if vote >= 10:
@@ -874,6 +932,11 @@ class DashboardScreen(Screen):
     def _update_status_bar(self) -> None:
         """Update the global status bar with item counts."""
         parts = []
+
+        # Demo mode banner — always first so it's visible in screenshots.
+        if config.DEMO_MODE:
+            parts.append("🎭 DEMO MODE — Fictional data")
+
         if self._my_prs:
             parts.append(f"My PRs: {len(self._my_prs)}")
         if self._reviewing_prs:

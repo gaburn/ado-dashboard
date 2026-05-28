@@ -6,7 +6,7 @@ from textual.app import App
 from textual.binding import Binding
 from textual.theme import Theme
 
-from ado_dashboard import __build__
+from ado_dashboard import __build__, config
 from ado_dashboard.screens.dashboard import DashboardScreen
 
 # Custom theme extending textual-dark with high-contrast colors.
@@ -40,4 +40,6 @@ class WipDashboardApp(App):
         """Register a high-contrast theme and push the dashboard."""
         self.register_theme(_wip_dark_theme)
         self.theme = "wip-dark"
+        if config.DEMO_MODE:
+            self.sub_title = f"🎭 DEMO MODE — Fictional data  ·  {__build__}"
         self.push_screen(DashboardScreen())

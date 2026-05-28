@@ -181,7 +181,32 @@ live `WIP_DASHBOARD_REPO_ROOT` hits outside `.squad/` history files.
 
 **Rule confirmed:** Before any public ship, check `git ls-files | grep -i internal` and `git ls-files | grep _1m_` to catch internal model references. Also confirm no ghost module directories survive renames.
 
-### 2026-07-17 (evening) — Public-prep sweep complete
+### 2026-07-17 — Demo mode: --demo flag with Tolkien fixture data
+
+**Scope:** Full demo mode implementation (feature commit on `dev` branch).
+
+**Architecture chosen — demo/ package with factory helpers:**
+- `src/ado_dashboard/demo/` package: `fixtures.py` (all Tolkien data) + `clients.py` (`DemoAdoClient`, `DemoTriageClient`, `DemoSessionClient`) + `__init__.py` (exports).
+- Three module-level factory functions in `dashboard.py` (`_demo_ado`, `_demo_triage`, `_demo_session`) return the demo client or `None` based on `config.DEMO_MODE`. Used as drop-in replacements at every call site in `_load_data` and `_refresh_triage`.
+- `config.DEMO_MODE: bool` reads `ADO_DASHBOARD_DEMO` env var, set at process start.
+- `--demo` CLI flag in `__main__.py` sets the env var and skips the setup wizard entirely.
+
+**Fixture data policy — obviously fictional:**
+- Org: `https://dev.azure.com/middle-earth`, project: `expedition`.
+- Demo user: `g.grey@middle-earth.example` (Gandalf). All reviewer emails use `@middle-earth.example`.
+- No `microsoft.com`, no real ADO URLs, no internal strings. Verified by `TestFixtureContentSafety`.
+
+**Triage categorization:** Pre-set `category`/`ai_why` on `TriageItem` instances directly (slots=True dataclass supports this). `categorize_triage_items()` may overwrite `category` but `ai_why` survives, giving rich triage display.
+
+**`_populate_reviewing_table` email fix:** Promoted from `config.USER_EMAIL` to `user_email: str = ""` parameter (with `email = user_email or config.USER_EMAIL` fallback). Backward-compatible — all existing call sites continue to work; demo mode passes `DEMO_USER_EMAIL` explicitly.
+
+**AI enrichment skip:** `_load_data` Stage 2 and `_refresh_triage` both guard `_start_ai_enrichment()` with `not config.DEMO_MODE` — no Copilot subprocess invoked in demo mode.
+
+**Testing:** 38 new tests in `src/tests/test_demo_mode.py` (156 total, all pass). Coverage: fixture shapes, model types, varied states, demo client method return types, factory behavior, subprocess-never-called assertions, content safety.
+
+**Key gotcha — `@staticmethod` with module-level state:** Can still access `config.USER_EMAIL` inside the body, but if you need the caller to pass a *different* email (demo mode), you must add a parameter. Pattern: `user_email: str = ""` with `email = user_email or config.MODULE_DEFAULT`.
+
+
 
 **Audit + execution phase final state:** Five parallel audits (Thorin, Balin, Dwalin, Bofur, Glóin) identified 20 total issues (1 blocker per agent track + 2–8 recommended + polish). Four parallel execution agents (Thorin, Dwalin, Bofur, Glóin) resolved all blockers and most recommended fixes in single commits:
 - Thorin: d677636 (hygiene, ghost module, .squad/ pruning, .gitignore hardening, requirements.txt delete)
