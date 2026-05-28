@@ -260,7 +260,7 @@ class EditWorkItemScreen(Screen["bool | None"]):
 
             yield Label("Type", classes="field-label")
             yield Static(
-                f"{wi.type_emoji}  {wi.work_item_type}  (read-only — see issue #4)",
+                f"{wi.type_emoji}  {wi.work_item_type}  (read-only in this version)",
                 id="field-type",
             )
 
@@ -536,8 +536,8 @@ class EditWorkItemScreen(Screen["bool | None"]):
     def on_edit_work_item_screen_save_conflicted(
         self, message: "EditWorkItemScreen.SaveConflicted"
     ) -> None:
-        self._save_state = "error"
         self._error_detail = "Conflict: someone else updated this work item."
+        self._save_state = "error"
 
         def _on_choice(choice: str | None) -> None:
             if choice == "refresh":
@@ -549,8 +549,8 @@ class EditWorkItemScreen(Screen["bool | None"]):
     def on_edit_work_item_screen_save_failed(
         self, message: "EditWorkItemScreen.SaveFailed"
     ) -> None:
-        self._save_state = "error"
         self._error_detail = message.detail or "Save failed."
+        self._save_state = "error"
         # Error-translation table — see decisions.md
         if message.kind == "validation":
             self.notify(message.detail or "Invalid field value.", severity="error")
