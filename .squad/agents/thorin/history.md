@@ -272,3 +272,34 @@ live `WIP_DASHBOARD_REPO_ROOT` hits outside `.squad/` history files.
 
 **Next step:** Thorin reviews design decisions, confirms type-change deferral, gates implementation work for tracks #3-a (Balin), #3-b (Thorin scaffolding), #3-c (Bofur screen), #3-d (Dwalin tests). Issue #3 implementation can proceed once sign-off complete.
 
+
+### 2026-05-28 — Issue #3 track #3-b: EditWorkItemScreen architecture decision
+
+**Doc:** .squad/decisions/inbox/thorin-issue-3-screen-architecture.md (awaiting Scribe merge).
+
+**Decisions:**
+- Full Screen[bool | None] (not ModalScreen); matches SettingsScreen (screens/settings.py:83). ModalScreen reserved for discard-confirm + conflict-resolver dialogs.
+- Launched from DetailScreen only via  (verified unused — audited every BINDINGS block in src/ado_dashboard). Binding hidden when _item is not a WorkItem.
+- Widgets: stock Input/Select/TextArea. No custom widgets v1. Type field is read-only Static (issue #4 honored).
+- Iteration / Area: flat Select v1 — Textual has no first-class tree-select; building one is out of scope. Flagged to Bofur.
+- Save worker: @work(exclusive=True, group="edit-save"). Three typed nested Message classes (SaveSucceeded, SaveConflicted, SaveFailed). Reactive _save_state: Literal["idle","saving","saved","error"] drives button labels + disabled state + banner.
+- **No abort mid-save** — worker.cancel() cannot roll back a partial z write. Buttons + Esc disabled while "saving".
+- Concurrency: refetch-before-write per Balin. Rev mismatch → ConflictResolverModal with **Refresh / Discard** only (no force-overwrite — data loss).
+- Screen is **the** error-translation point. Five exception→UI mappings (validation inline, auth banner+disable, transport banner+retry, conflict modal).
+- Demo mode:  notifies "Editing disabled in demo mode." and does not open the screen — consistent with read-only DemoAdoClient.
+
+**Conflict found in existing code (blocker flagged to Balin):**
+- WorkItem dataclass (models.py:311–383) has **no ev field**. Balin's API design (2026-05-28) assumes one for optimistic concurrency. Without it the screen track cannot start. Raised in issue #3 comment and in §4 + §7 + Open Question #3 of my doc — Balin owns the fix in track #3-a.
+
+**Other gaps flagged for implementation:**
+- Exception hierarchy: subclass vs sibling — recommended subclass to Balin so xcept ADOClientError still catches.
+- ~4 extra test cases for ConflictResolverModal flows owed by Dwalin (Refresh, Discard, double-conflict, save-during-modal).
+- Bofur UX spec did not address rev-conflict copy/buttons — my doc proposes a default, Bofur to confirm.
+
+**Answered from Dwalin's 10 open questions:** Q2 (plain text), Q3 (Type read-only confirmed), Q5 (flat paths), Q6 (key bindings audited —  unused), Q7 (" *" subtitle suffix, no color-only), Q8 (online-only, no offline queue, retry button on metadata fetch failure), Q10 (demo mode disabled). Q1/Q4/Q9 deferred to Balin.
+
+**File manifest published** (§7): 1 new file screens/edit.py, 4 modified (screens/detail.py, screens/__init__.py, styles/app.tcss, plus models.py/do_client.py on Balin's track), 1 new test file 	ests/test_edit_screen.py.
+
+**12-point acceptance gate published** (§8). Implementation can start once Balin lands the ev field on WorkItem.
+
+**GitHub trail:** posted summary comment on issue #3 (https://github.com/gaburn/ado-dashboard/issues/3#issuecomment-4569184227).

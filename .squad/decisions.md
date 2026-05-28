@@ -244,6 +244,33 @@ Full-screen one-column edit form (calm, matches Settings screen). Fields: Type (
 
 52-case test plan spanning API layer (17 update_work_item cases: 7 success, 10 failure), screen layer (17 Pilot tests: form navigation, dirty-state, error handling, key bindings), snapshots (8 fixed-size renders), and integration (2 slow recorded cycles). Mocking boundary: `asyncio.create_subprocess_exec` (consistent with existing `test_ado_client.py`; swap to `respx` only if Balin's spike recommends httpx). Coverage targets: 100% for new API functions and error types, ≥90% for screen, 100% for diff-only changes in detail.py. 10 open questions for team (cache multi-process behavior, description format, type-change deferral, exception hierarchy, flat vs. tree paths, key bindings, dirty cue, offline behavior, httpx decision, demo-mode). Fixtures: 10 new + promoted from test_ado_client.
 
+### Decision: Issue #3 — EditWorkItemScreen Architecture (Track #3-b)
+
+**Date:** 2026-05-28  
+**Author:** Thorin (Lead / Textual architect)  
+**Status:** Proposed — gates implementation of tracks #3-b, #3-c, #3-d  
+**File:** `.squad/decisions/thorin-issue-3-screen-architecture.md` (archived)
+
+#### Summary
+
+`EditWorkItemScreen` is a full `Screen[bool | None]` (not modal) launched from `DetailScreen` via `e`. Composes one-column form with native Textual widgets (Input, Select, TextArea) backed by reactive dirty/saving state. Save runs on `@work(exclusive=True)` worker calling Balin's `update_work_item()` with guarded refetch; surfaces outcomes as posted messages (SaveSucceeded, SaveConflicted, SaveFailed) and reactive `_save_state` literal. On rev-conflict, user gets modal re-prompt ("Refresh & merge / Discard / Overwrite") — never silent merge. Five v1 fields: Title, State, Iteration, Area Path, Description (Type read-only, issue #4). Screen is only exception translation point; all Balin exceptions caught and converted to UI affordances.
+
+#### Key Architecture Decisions
+
+- **Screen type:** full Screen, not modal — accommodates tall form + two stacked ModalScreen instances (dirty-discard, rev-conflict resolvers)
+- **Launch binding:** `e` only on DetailScreen for WorkItems; unused keystroke verified across all screen bindings
+- **Concurrency:** client-side rev refetch before write; conflicts surfaced to user for resolution (no auto-merge)
+- **Demo mode:** EditWorkItemScreen disabled in demo mode (DemoAdoClient has no write surface)
+- **Error translation:** screen is single translation point — all Balin exceptions caught; validation/conflict/auth errors each mapped to distinct UI affordances
+
+#### Blocking Dependency — `WorkItem.rev` Field Gap
+
+**CRITICAL BLOCKING FINDING:** `WorkItem` dataclass (models.py:311–383) is missing `rev: int | None = None` field. Balin's API design in track #3-a assumes this field exists for concurrency control. **Balin must add this field in track #3-a before screen track #3-b can begin.** Populate from `data.get("rev")` in `from_az_json()`.
+
+#### Acceptance Gate
+
+12-point acceptance gate includes: Launch (e opens screen on WorkItems only), form populated with current values, dirty tracking, cancel paths (clean/dirty with confirmation), validation, save success, concurrency (rev-conflict handling), error surfacing, demo mode, clean async (no blocking I/O), test coverage (17 screen cases + 8 snapshots green), no regression (156 suite still green).
+
 ---
 
 ## Governance

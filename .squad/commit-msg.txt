@@ -1,0 +1,10 @@
+Scribe: Merge Issue #3 triage inbox, log orchestration & session
+
+- Merged 2 inbox files (thorin-demo-mode, thorin-issue-3-triage) into decisions.md
+- Wrote orchestration log: 2026-05-28T22-46-39Z-thorin.md
+- Wrote session log: 2026-05-28T22-46-39Z-issue-3-triage.md
+- Appended Issue #3 track assignments to team history (Balin, Bofur, Dwalin)
+- No archive needed (decisions.md < 20480 bytes)
+- No summarization needed (all history.md < 15360 bytes)
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
