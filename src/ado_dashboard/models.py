@@ -325,6 +325,7 @@ class WorkItem:
     priority: int | None = None
     parent_id: int | None = None
     is_context_parent: bool = False
+    rev: int | None = None
 
     # -- Computed properties -------------------------------------------------
 
@@ -367,6 +368,14 @@ class WorkItem:
         raw_parent = fields.get("System.Parent")
         parent_id = int(raw_parent) if raw_parent else None
 
+        # Concurrency token. ADO returns ``rev`` at the top level of the
+        # work-item payload; older WIQL responses surface it as
+        # ``System.Rev`` inside ``fields``. Prefer the top-level value.
+        raw_rev = data.get("rev")
+        if raw_rev is None:
+            raw_rev = fields.get("System.Rev")
+        rev = int(raw_rev) if raw_rev is not None else None
+
         return cls(
             id=wi_id,
             title=fields.get("System.Title", ""),
@@ -380,6 +389,7 @@ class WorkItem:
             description=fields.get("System.Description"),
             priority=fields.get("Microsoft.VSTS.Common.Priority"),
             parent_id=parent_id,
+            rev=rev,
         )
 
 
