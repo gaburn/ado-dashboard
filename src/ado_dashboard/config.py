@@ -37,8 +37,25 @@ def _find_repo_root() -> str:
     return ""
 
 
-# WIP_DASHBOARD_REPO_ROOT overrides automatic git-root detection.
-REPO_ROOT: str = os.environ.get("WIP_DASHBOARD_REPO_ROOT") or _find_repo_root()
+# ADO_DASHBOARD_REPO_ROOT overrides automatic git-root detection.
+# WIP_DASHBOARD_REPO_ROOT is the deprecated predecessor — checked as fallback.
+def _resolve_repo_root() -> str:
+    import warnings  # stdlib — safe to import lazily here
+    val = os.environ.get("ADO_DASHBOARD_REPO_ROOT")
+    if val:
+        return val
+    val = os.environ.get("WIP_DASHBOARD_REPO_ROOT")
+    if val:
+        warnings.warn(
+            "WIP_DASHBOARD_REPO_ROOT is deprecated; rename to ADO_DASHBOARD_REPO_ROOT.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return val
+    return _find_repo_root()
+
+
+REPO_ROOT: str = _resolve_repo_root()
 
 # ---------------------------------------------------------------------------
 # Resolved values — env vars win, then defaults.
@@ -72,7 +89,7 @@ TRIAGE_PR_REPO: str = os.environ.get("TRIAGE_PR_REPO", "")
 # ---------------------------------------------------------------------------
 INVESTIGATIONS_DIR: str = os.environ.get(
     "INVESTIGATIONS_DIR",
-    os.path.expanduser("~/.wip-dashboard/investigations"),
+    os.path.expanduser("~/.ado-dashboard/investigations"),
 )
 INVESTIGATION_MODEL: str = os.environ.get("INVESTIGATION_MODEL", "")
 INVESTIGATION_AGENT: str = os.environ.get("INVESTIGATION_AGENT", "")
@@ -83,7 +100,7 @@ INVESTIGATION_AGENT: str = os.environ.get("INVESTIGATION_AGENT", "")
 AI_TRIAGE_MODE: str = os.environ.get("AI_TRIAGE_MODE", "copilot")  # "copilot" or "off"
 TRIAGE_CACHE_DIR: str = os.environ.get(
     "TRIAGE_CACHE_DIR",
-    os.path.expanduser("~/.wip-dashboard/triage"),
+    os.path.expanduser("~/.ado-dashboard/triage"),
 )
 TRIAGE_CACHE_MAX_AGE_SECONDS: int = int(os.environ.get("TRIAGE_CACHE_MAX_AGE", "1800"))
 
@@ -95,6 +112,25 @@ COPILOT_SESSION_DIR: str = os.environ.get(
     os.path.expanduser("~/.copilot/session-state"),
 )
 SESSION_MAX_AGE_DAYS: int = int(os.environ.get("SESSION_MAX_AGE_DAYS", "7"))
+
+
+# ---------------------------------------------------------------------------
+# URL helpers (internal)
+# ---------------------------------------------------------------------------
+
+def _normalize_org_url(raw: str) -> str:
+    """Ensure the org URL is a full HTTPS URI.
+
+    Accepts:
+      - Full URL:  ``https://dev.azure.com/myorg``  → unchanged
+      - Bare name: ``myorg``                         → ``https://dev.azure.com/myorg``
+
+    Trailing slashes are stripped in all cases.
+    """
+    raw = raw.strip().rstrip("/")
+    if raw and not raw.startswith(("http://", "https://")):
+        raw = f"https://dev.azure.com/{raw}"
+    return raw
 
 
 # ---------------------------------------------------------------------------
@@ -114,7 +150,7 @@ def load_from_file(file_data: dict) -> None:
     global TRIAGE_SCRIPT_PATH, TRIAGE_BOARD, TRIAGE_BOARD_OPTIONS, TRIAGE_PR_REPO  # noqa: PLW0603
 
     if "ADO_ORG_URL" not in os.environ and "ado_org_url" in file_data:
-        ORG_URL = file_data["ado_org_url"]
+        ORG_URL = _normalize_org_url(file_data["ado_org_url"])
 
     if "ADO_PROJECT" not in os.environ and "ado_project" in file_data:
         PROJECT = file_data["ado_project"]
@@ -179,7 +215,7 @@ def apply_overrides(namespace: Any) -> None:
     global TRIAGE_BOARD  # noqa: PLW0603
 
     if getattr(namespace, "org_url", None) is not None:
-        ORG_URL = namespace.org_url
+        ORG_URL = _normalize_org_url(namespace.org_url)
     if getattr(namespace, "project", None) is not None:
         PROJECT = namespace.project
     if getattr(namespace, "user_email", None) is not None:

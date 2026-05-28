@@ -17,7 +17,7 @@ from platformdirs import user_config_path
 
 log = logging.getLogger(__name__)
 
-_APP_NAME = "wip-dashboard"
+_APP_NAME = "ado-dashboard"
 _CONFIG_VERSION = 1
 
 
@@ -139,6 +139,9 @@ def run_setup(existing_config: dict | None = None) -> dict:
     # Treat the placeholder as empty — don't persist it literally.
     if ado_org_url == "https://dev.azure.com/<your-org>":
         ado_org_url = ""
+    # Normalize bare org names (e.g. "myorg" → "https://dev.azure.com/myorg").
+    if ado_org_url and not ado_org_url.startswith(("http://", "https://")):
+        ado_org_url = f"https://dev.azure.com/{ado_org_url.strip('/')}"
 
     # --- Projects for PR queries ---
     ado_projects = _prompt_list(
