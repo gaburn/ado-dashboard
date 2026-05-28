@@ -118,3 +118,28 @@ live `WIP_DASHBOARD_REPO_ROOT` hits outside `.squad/` history files.
 3. Name the cause ("not configured"), point to the fix ("Settings"), be optional in tone ("if you'd like").
 4. Keep the configured-but-empty copy as a distinct, accurate message.
 
+### 2026-07-17 — PR #1 merge conflict resolution: dev → main (18 files)
+
+**Situation:** `dev` diverged ~18 commits from `main` after the OSS scrub and rename were re-applied to `main` independently (different hashes, same intent). Standard `git merge` produced add/add conflicts on every file first created post-divergence.
+
+**Root cause:** `main` was updated in isolation (CI, ruff, tests, README badges, LICENSE year) without first merging `dev`. Both branches independently authored the same files with different names/imports (`wip_dashboard` on main, `ado_dashboard` on dev).
+
+**Resolution applied (by file class):**
+
+| Class | Rule | Rationale |
+|---|---|---|
+| Tests (6) | Ours (dev) | Post-rename `ado_dashboard` imports; test logic identical |
+| docs/ (6) | Ours (dev) | Post-rename "ADO Dashboard" branding throughout |
+| CONTRIBUTING.md | Ours (dev) | Post-rename `ado-dashboard` CLI references |
+| bug_report.md | Ours (dev) | Post-rename `ado-dashboard` CLI references |
+| pyproject.toml | Ours (dev) | `ado-dashboard` name, `0.2.1` version, `ado_dashboard` package |
+| LICENSE | Theirs (main) | 2026 copyright year — main had the more recent update |
+| README.md | Merged | Title + commands from dev; CI + license badges from main |
+| .gitignore | Union | All squad runtime entries (dev) + squad-exclusion entries (main) |
+
+**Key lesson:** When two branches independently apply the same conceptual change with different content, `git checkout --ours/--theirs` is clean and correct. Only files where both sides made **distinct, additive contributions** (README badges, .gitignore exclusion rules) needed a true manual merge.
+
+**Outcome:** All 79 tests pass. PR #1 `mergeable: MERGEABLE`. `mergeStateStatus: BLOCKED` reflects required-review branch protection, not conflicts.
+
+**Decision note:** `.squad/decisions/inbox/thorin-pr1-merge-resolution.md`
+
