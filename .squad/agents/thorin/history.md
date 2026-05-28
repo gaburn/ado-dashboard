@@ -143,3 +143,41 @@ live `WIP_DASHBOARD_REPO_ROOT` hits outside `.squad/` history files.
 
 **Decision note:** `.squad/decisions/inbox/thorin-pr1-merge-resolution.md`
 
+### 2025-07-17 — Public-readiness audit: repo hygiene + architectural review
+
+**Scope:** Audit-only pass (no files changed). Full report at `.squad/decisions/inbox/thorin-public-audit.md`.
+
+**Two blockers identified:**
+1. `src/wip_dashboard/` (22 files) still tracked — ghost of incomplete rename that survived the PR #1 merge. `git rm -r src/wip_dashboard/` required.
+2. `.squad/config.json` references `claude-opus-4.7-1m-internal` — internal model name; must be replaced with a public model or removed before main goes public.
+
+**Key recommended fixes:**
+- `.ruff_cache/` missing from `.gitignore` — gap allows accidental commit.
+- `requirements.txt` is a 1-line duplicate of `pyproject.toml`; delete it.
+- `~/.wip-dashboard/` in `.gitignore` is a no-op (tilde not expanded by git); remove.
+- `.squad/` public-shipping decision is deferred to user: the gitignore guard is in place for main, but files are tracked on dev — `git rm` needed if the answer is "no".
+- Cross-platform OS cruft patterns (`.DS_Store`, `Thumbs.db`, `desktop.ini`, `*.tmp`, `*.bak`) missing from `.gitignore`.
+
+**Architecture verdict:** `ado_dashboard` module shape is sound — clean boundaries, discoverable `__main__.py`, single dependency. No structural issues beyond the ghost module.
+
+**Gotcha — log path in `__main__.py`:** Log file is written 3 levels above `__file__` which resolves to repo root during dev but to a Python lib directory when installed via pip. Should write to `~/.ado-dashboard/` instead.
+
+### 2026-07-17 — Pre-public hygiene: ghost module removal, .squad/ pruning, .gitignore cleanup
+
+**Scope:** Release-quality hygiene pass before PyPI ship. Decision note at `.squad/decisions/inbox/thorin-public-prep-execution.md`.
+
+**Ghost module removed:** `src/wip_dashboard/` — 22 files (`git rm -rf`). These were the pre-rename copies that survived the PR #1 merge. They imported nothing from the live `ado_dashboard` module and were pure dead weight. No test failures after removal (79/79 pass).
+
+**Internal model name scrubbed:** `.squad/config.json` — all four `agentModelOverrides` entries changed from `claude-opus-4.7-1m-internal` to `claude-opus-4.7`. Kept the file; it is useful for contributors who run squad locally.
+
+**.squad/ pruning:** Removed `templates/`, `orchestration-log/`, `log/`, `casting/`, `skills/`, `identity/`, `.first-run`. Kept: `team.md`, `routing.md`, `ceremonies.md`, `decisions/decisions.md`, `config.json`, and all agent `charter.md`/`history.md` files. The `decisions/inbox/` was not tracked — no action needed.
+
+**.gitignore updates:**
+- Added `.ruff_cache/`, `*.tmp`, `*.bak`, `.DS_Store`, `Thumbs.db`, `desktop.ini`
+- Added the pruned `.squad/` paths so they don't get re-tracked
+- Removed no-op `~/.wip-dashboard/` line (tilde not expanded by git)
+
+**requirements.txt deleted:** Was a 1-line file (`textual>=3.0.0`) — pure duplicate of `pyproject.toml`. Deleted via `git rm`.
+
+**Rule confirmed:** Before any public ship, check `git ls-files | grep -i internal` and `git ls-files | grep _1m_` to catch internal model references. Also confirm no ghost module directories survive renames.
+

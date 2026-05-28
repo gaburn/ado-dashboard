@@ -6,10 +6,43 @@ build-backend = "hatchling.build"
 name = "ado-dashboard"
 version = "0.2.1"
 description = "Interactive terminal dashboard for Azure DevOps PRs and work items"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "ado-dashboard contributors" }]
 requires-python = ">=3.12"
-dependencies = [
-    "textual>=3.0.0",
+keywords = [
+    "azure-devops",
+    "ado",
+    "tui",
+    "terminal",
+    "dashboard",
+    "textual",
+    "pull-requests",
+    "work-items",
 ]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development",
+    "Topic :: Utilities",
+    "Framework :: AsyncIO",
+]
+dependencies = [
+    "textual>=3.0.0,<5",
+    "platformdirs>=3.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/gaburn/ado-dashboard"
+Repository = "https://github.com/gaburn/ado-dashboard"
+Issues = "https://github.com/gaburn/ado-dashboard/issues"
+Changelog = "https://github.com/gaburn/ado-dashboard/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [

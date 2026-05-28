@@ -47,7 +47,8 @@ def _resolve_repo_root() -> str:
     val = os.environ.get("WIP_DASHBOARD_REPO_ROOT")
     if val:
         warnings.warn(
-            "WIP_DASHBOARD_REPO_ROOT is deprecated; rename to ADO_DASHBOARD_REPO_ROOT.",
+            "WIP_DASHBOARD_REPO_ROOT is deprecated; rename to ADO_DASHBOARD_REPO_ROOT."
+            " This fallback will be removed in v0.4.0.",
             DeprecationWarning,
             stacklevel=2,
         )

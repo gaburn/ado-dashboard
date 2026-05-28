@@ -6,6 +6,8 @@ import argparse
 import logging
 from pathlib import Path
 
+import platformdirs
+
 
 def _parse_args() -> argparse.Namespace:
     """Build and parse CLI arguments."""
@@ -74,7 +76,9 @@ def main() -> None:
     config.apply_overrides(args)
 
     # File logging for debugging window-focus and session issues.
-    log_file = Path(__file__).resolve().parent.parent.parent / "ado-dashboard.log"
+    log_dir = Path(platformdirs.user_log_path("ado-dashboard"))
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / "ado-dashboard.log"
     file_handler = logging.FileHandler(log_file, mode="w", encoding="utf-8")
     file_handler.setFormatter(
         logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
