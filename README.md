@@ -1,4 +1,4 @@
-# WIP Dashboard
+# ADO Dashboard
 
 Interactive terminal dashboard for Azure DevOps — pull requests, reviews, work items, triage, and Copilot sessions in one place.
 
@@ -9,11 +9,11 @@ Interactive terminal dashboard for Azure DevOps — pull requests, reviews, work
 ```bash
 cd wip-dashboard
 pip install -e .
-wip-dashboard
+ado-dashboard
 ```
 
 On first launch an interactive setup wizard walks you through configuration.
-Re-run it any time with `wip-dashboard --setup`.
+Re-run it any time with `ado-dashboard --setup`.
 
 ## Prerequisites
 
@@ -32,7 +32,7 @@ Re-run it any time with `wip-dashboard --setup`.
 | 2 | **Reviewing** | PRs where you are a reviewer. Vote status shown as ✓ approved / ✗ rejected / · pending. Declined PRs filtered out. Approved reviews highlighted green. |
 | 3 | **Work Items** | ADO work items assigned to you. Filters out Closed, Done, Completed, Cut, and Resolved states. |
 | 4 | **Triage** | On-call triage board with a board selector dropdown, priority groups, categorization, action plan, and clickable links. Switching boards refreshes the view with a loading indicator. |
-| 5 | **Sessions** | Active Copilot CLI sessions with status, intent, and working directory. Press `R` (Shift+R) to resume an inactive session in a new Windows Terminal tab. Press `f` to focus the terminal of an active session. |
+| 5 | **Copilot Sessions** | Active Copilot CLI sessions with status, intent, and working directory. Press `R` (Shift+R) to resume an inactive session in a new Windows Terminal tab. Press `f` to focus the terminal of an active session. |
 
 ## Keyboard Shortcuts
 
@@ -59,11 +59,11 @@ Re-run it any time with `wip-dashboard --setup`.
 
 Settings are resolved in order: **CLI args → environment variables → config file → defaults**.
 
-Config file location: `%LOCALAPPDATA%\wip-dashboard\config.json` (Windows) or `~/.config/wip-dashboard/config.json` (Linux/macOS).
+Config file location: `%LOCALAPPDATA%\ado-dashboard\config.json` (Windows) or `~/.config/ado-dashboard/config.json` (Linux/macOS).
 
 | Method | Example |
 |---|---|
-| Setup wizard | `wip-dashboard` (first run) or `wip-dashboard --setup` |
+| Setup wizard | `ado-dashboard` (first run) or `ado-dashboard --setup` |
 | CLI flag | `--projects MyProject,OtherProject` |
 | In-app | Press `s` to open settings |
 
@@ -87,7 +87,7 @@ Config file location: `%LOCALAPPDATA%\wip-dashboard\config.json` (Windows) or `~
 | `INVESTIGATION_MODEL` | Model for investigation sessions |
 | `INVESTIGATION_AGENT` | Agent for investigation sessions |
 | `INVESTIGATIONS_DIR` | Directory for investigation results |
-| `WIP_DASHBOARD_REPO_ROOT` | Repository root (for skill discovery) |
+| `ADO_DASHBOARD_REPO_ROOT` | Repository root (for skill discovery) |
 
 In **Settings** (`s`), the **Triage Boards** section lets you configure multiple boards with separate **Name** and **URL** fields, then add/remove entries dynamically. Boards are stored in `config.json` as `[display_name, url]` pairs.
 
@@ -101,18 +101,18 @@ In **Settings** (`s`), the **Triage Boards** section lets you configure multiple
 - **Investigation launcher** — press `i`/`I` to launch AI-powered investigation sessions for triage items. Requires a configured `InvestigationLauncher` (see `docs/investigation.md`).
 - **Dynamic settings** — investigation model and agent dropdowns are populated from the active launcher at runtime.
 - **Title cleanup** — board name prefixes are automatically stripped from triage item titles for cleaner display.
-- **Search** — press `/` to open a search bar that filters the active tab's table in real-time. Press `Enter` to keep the filter, `Escape` to clear it. Works on My PRs, Reviewing, Work Items, and Sessions tabs.
+- **Search** — press `/` to open a search bar that filters the active tab's table in real-time. Press `Enter` to keep the filter, `Escape` to clear it. Works on My PRs, Reviewing, Work Items, and Copilot Sessions tabs.
 
 ## How It Works
 
-WIP Dashboard is a [Textual](https://textual.textualize.io/) TUI. It calls the `az` CLI asynchronously to fetch data from Azure DevOps, keeping the UI responsive. Detail views fetch richer metadata in the background (`az repos pr show`, `az boards work-item show`). Triage data comes from a configurable PowerShell script (see `docs/triage-and-investigation.md`). Investigation sessions are launched via the configured `InvestigationLauncher` adapter (see `docs/investigation.md`).
+ADO Dashboard is a [Textual](https://textual.textualize.io/) TUI. It calls the `az` CLI asynchronously to fetch data from Azure DevOps, keeping the UI responsive. Detail views fetch richer metadata in the background (`az repos pr show`, `az boards work-item show`). Triage data comes from a configurable PowerShell script (see `docs/triage-and-investigation.md`). Investigation sessions are launched via the configured `InvestigationLauncher` adapter (see `docs/investigation.md`).
 
 ---
 
 ## Architecture at a Glance
 
 ```
-wip-dashboard (CLI)
+ado-dashboard (CLI)
   └─ WipDashboardApp (Textual App)
        └─ DashboardScreen          ← 5-tab layout, all data workers
             ├─ ado_client          ← az CLI subprocess wrapper (async)

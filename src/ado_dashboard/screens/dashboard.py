@@ -28,21 +28,21 @@ from textual.widgets import (
     TabPane,
 )
 
-from wip_dashboard import config, triage_cache
-from wip_dashboard.ado_client import (
+from ado_dashboard import config, triage_cache
+from ado_dashboard.ado_client import (
     fetch_my_prs,
     fetch_reviewing_prs,
     fetch_work_items_with_hierarchy,
 )
-from wip_dashboard.investigation_prompts import (
+from ado_dashboard.investigation_prompts import (
     build_ai_triage_prompt,
     build_board_investigation_prompt,
     build_item_investigation_prompt,
 )
-from wip_dashboard.models import CopilotSession, PullRequest, TriageItem, WorkItem
-from wip_dashboard.session_client import fetch_sessions, launch_investigation, resume_session
-from wip_dashboard.triage_categorizer import apply_ai_analysis, categorize_triage_items, generate_action_plan
-from wip_dashboard.triage_client import fetch_triage_items
+from ado_dashboard.models import CopilotSession, PullRequest, TriageItem, WorkItem
+from ado_dashboard.session_client import fetch_sessions, launch_investigation, resume_session
+from ado_dashboard.triage_categorizer import apply_ai_analysis, categorize_triage_items, generate_action_plan
+from ado_dashboard.triage_client import fetch_triage_items
 
 log = logging.getLogger(__name__)
 
@@ -157,7 +157,7 @@ _PRIORITY_DISPLAY: dict[int, tuple[str, str, bool]] = {
 # Dashboard Screen
 # ---------------------------------------------------------------------------
 class DashboardScreen(Screen):
-    """Five-tab dashboard showing My PRs, Reviewing PRs, Work Items, Triage, and Sessions."""
+    """Five-tab dashboard showing My PRs, Reviewing PRs, Work Items, Triage, and Copilot Sessions."""
 
     BINDINGS = [
         Binding("r", "refresh", "Refresh"),
@@ -167,7 +167,7 @@ class DashboardScreen(Screen):
         Binding("2", "switch_tab('reviewing')", "Reviewing"),
         Binding("3", "switch_tab('work-items')", "Work Items"),
         Binding("4", "switch_tab('triage')", "Triage"),
-        Binding("5", "switch_tab('sessions')", "Sessions"),
+        Binding("5", "switch_tab('sessions')", "Copilot Sessions"),
         # Sort by column (Shift+0 … Shift+5). A single footer hint is enough.
         Binding(")", "sort_column(0)", "Sort", show=True, key_display="SHIFT+0"),
         Binding("!", "sort_column(1)", show=False),
@@ -244,7 +244,7 @@ class DashboardScreen(Screen):
                         id="triage-board-select",
                     )
                 yield VerticalScroll(id="triage-scroll")
-            with TabPane("Sessions", id="sessions"):
+            with TabPane("Copilot Sessions", id="sessions"):
                 yield DataTable(id="sessions-table", cursor_type="row", zebra_stripes=True)
         yield Input(id="search-input", placeholder="Search… (Esc to close)", classes="hidden")
         yield Static("", id="status-bar")
@@ -359,12 +359,16 @@ class DashboardScreen(Screen):
             await scroll.mount(Static(f"Loading {board_name}…", classes="triage-empty"))
             await scroll.mount(LoadingIndicator())
 
-            try:
-                items = await fetch_triage_items(board=self._selected_board)
-            except Exception as exc:
-                log.warning("Triage fetch failed (non-fatal): %s", exc)
-                self.notify(f"Triage: {exc}", severity="warning", timeout=8, markup=False)
+            if not config.TRIAGE_SCRIPT_PATH:
+                log.info("Triage: no script configured, skipping fetch")
                 items = []
+            else:
+                try:
+                    items = await fetch_triage_items(board=self._selected_board)
+                except Exception as exc:
+                    log.warning("Triage fetch failed (non-fatal): %s", exc)
+                    self.notify(f"Triage: {exc}", severity="warning", timeout=8, markup=False)
+                    items = []
             self._triage_items = items
             self._triage_groups = categorize_triage_items(items)
             self._ai_action_plan = generate_action_plan(self._triage_groups)
@@ -557,12 +561,16 @@ class DashboardScreen(Screen):
         await scroll.mount(Static(f"Loading {board_name}…", classes="triage-empty"))
         await scroll.mount(LoadingIndicator())
 
-        try:
-            items = await fetch_triage_items(board=self._selected_board)
-        except Exception as exc:
-            log.warning("Triage fetch failed: %s", exc)
-            self.notify(f"Triage: {exc}", severity="warning", timeout=8, markup=False)
+        if not config.TRIAGE_SCRIPT_PATH:
+            log.info("Triage: no script configured, skipping fetch")
             items = []
+        else:
+            try:
+                items = await fetch_triage_items(board=self._selected_board)
+            except Exception as exc:
+                log.warning("Triage fetch failed: %s", exc)
+                self.notify(f"Triage: {exc}", severity="warning", timeout=8, markup=False)
+                items = []
         self._triage_items = items
         self._triage_groups = categorize_triage_items(items)
         self._ai_action_plan = generate_action_plan(self._triage_groups)
@@ -747,9 +755,14 @@ class DashboardScreen(Screen):
         gen = self._triage_gen
 
         if not self._triage_items:
-            await scroll.mount(
-                Static("No items in triage queue 🎉", classes="triage-empty")
-            )
+            if not config.TRIAGE_SCRIPT_PATH:
+                msg = (
+                    "No triage board configured. "
+                    "Add one in Settings if you'd like to use Triage."
+                )
+            else:
+                msg = "No items in triage queue 🎉"
+            await scroll.mount(Static(msg, classes="triage-empty"))
             return
 
         # Show which analysis mode produced the triage results
@@ -880,7 +893,7 @@ class DashboardScreen(Screen):
 
         if self._sessions:
             active = sum(1 for s in self._sessions if s.is_active)
-            parts.append(f"⚡ Sessions: {active} active / {len(self._sessions)}")
+            parts.append(f"⚡ Copilot Sessions: {active} active / {len(self._sessions)}")
 
         try:
             bar = self.query_one("#status-bar", Static)
@@ -928,7 +941,7 @@ class DashboardScreen(Screen):
             self.notify("Session is not active", severity="warning")
             return
 
-        from wip_dashboard.window_focus import focus_terminal_by_pid
+        from ado_dashboard.window_focus import focus_terminal_by_pid
 
         self.notify(f"Focusing PID {item.pid} for session {item.id[:8]}…")
         success, message = focus_terminal_by_pid(item.pid)
@@ -1123,7 +1136,7 @@ class DashboardScreen(Screen):
 
     def action_open_settings(self) -> None:
         """Open the settings screen."""
-        from wip_dashboard.screens.settings import SettingsScreen
+        from ado_dashboard.screens.settings import SettingsScreen
 
         def _on_result(changed: bool | None) -> None:
             if changed:
@@ -1310,7 +1323,7 @@ class DashboardScreen(Screen):
         item = self._item_for_table(event.data_table, event.cursor_row)
         if item is None:
             return
-        from wip_dashboard.screens.detail import DetailScreen
+        from ado_dashboard.screens.detail import DetailScreen
 
         self.app.push_screen(DetailScreen(item))
 
@@ -1382,7 +1395,7 @@ class DashboardScreen(Screen):
 
     def _persist_board_selection(self, board: str) -> None:
         """Save the board choice to the config file."""
-        from wip_dashboard.setup_wizard import load_config, save_config
+        from ado_dashboard.setup_wizard import load_config, save_config
         data = load_config()
         data["triage_board"] = board
         save_config(data)

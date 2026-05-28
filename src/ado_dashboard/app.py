@@ -1,4 +1,4 @@
-"""Textual App class for the WIP Dashboard."""
+"""Textual App class for the ADO Dashboard."""
 
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ from textual.app import App
 from textual.binding import Binding
 from textual.theme import Theme
 
-from wip_dashboard import __build__, __version__
-from wip_dashboard.screens.dashboard import DashboardScreen
+from ado_dashboard import __build__, __version__
+from ado_dashboard.screens.dashboard import DashboardScreen
 
 # Custom theme extending textual-dark with high-contrast colors.
 _wip_dark_theme = Theme(
@@ -29,8 +29,8 @@ class WipDashboardApp(App):
     """Interactive terminal dashboard for Azure DevOps PRs and work items."""
 
     CSS_PATH = "styles/app.tcss"
-    TITLE = "WIP Dashboard"
-    SUB_TITLE = f"ADO PRs, Work Items, On-Call Triage, Sessions — v{__version__} ({__build__})"
+    TITLE = "ADO Dashboard"
+    SUB_TITLE = f"ADO PRs, Work Items, On-Call Triage, Copilot Sessions — v{__version__} ({__build__})"
 
     BINDINGS = [
         Binding("q", "quit", "Quit"),

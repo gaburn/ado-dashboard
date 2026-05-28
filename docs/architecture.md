@@ -1,13 +1,13 @@
 # Architecture
 
-WIP Dashboard is a [Textual](https://textual.textualize.io/) TUI. The only runtime dependency is `textual>=3.0.0`; all Azure DevOps communication is via the `az` CLI subprocess. There is no HTTP library in the package.
+ADO Dashboard is a [Textual](https://textual.textualize.io/) TUI. The only runtime dependency is `textual>=3.0.0`; all Azure DevOps communication is via the `az` CLI subprocess. There is no HTTP library in the package.
 
 ---
 
 ## Module Map
 
 ```
-src/wip_dashboard/
+src/ado_dashboard/
 ├── __main__.py          Entry point: arg parsing, setup wizard, config loading, app launch
 ├── app.py               WipDashboardApp — theme, CSS path, root screen push
 ├── config.py            Config module globals, 4-layer resolution helpers, URL helpers
@@ -22,7 +22,7 @@ src/wip_dashboard/
 ├── ado_client.py        Async wrapper around `az repos` / `az boards` CLI commands
 ├── triage_client.py     Async runner for Get-TriageItems.ps1; JSON extraction
 ├── triage_categorizer.py Pure-function rule-based categorizer + AI result merger
-├── triage_cache.py      File-based cache for AI triage JSON (~/.wip-dashboard/triage/)
+├── triage_cache.py      File-based cache for AI triage JSON (~/.ado-dashboard/triage/)
 ├── session_client.py    Scan ~/.copilot/session-state/; launch/resume sessions in Windows Terminal
 ├── investigation_prompts.py  Prompt builders for Copilot investigation sessions
 ├── window_focus.py      Win32 ctypes window-focus by PID ancestor chain
@@ -94,7 +94,7 @@ Long-running work uses Textual's `@work` decorator. Workers run on the asyncio e
 
 | Worker | Decorator args | What it does |
 |--------|----------------|--------------|
-| `DashboardScreen._load_data` | `@work(exclusive=True)` | Stage-1: fetch My PRs first; Stage-2: parallel gather for Reviewing, WIs, Triage, Sessions |
+| `DashboardScreen._load_data` | `@work(exclusive=True)` | Stage-1: fetch My PRs first; Stage-2: parallel gather for Reviewing, WIs, Triage, Copilot Sessions |
 | `DashboardScreen._refresh_triage` | `@work(exclusive=True, group="triage-fetch")` | Re-fetch single board on dropdown change |
 | `DashboardScreen._start_copilot_triage` | `@work(exclusive=True, group="copilot-triage")` | Launch AI triage or apply cached results |
 | `DetailScreen._load_detail` (inferred) | `@work` | Fetch full PR/WI detail in background |
@@ -146,8 +146,8 @@ Settings returns `Screen[bool]` — `True` on save, `False` on cancel.
 | Sort state per table | `DashboardScreen._sort_state` dict keyed by table widget ID |
 | Triage priority groups | `DashboardScreen._triage_groups` dict `{priority: [TriageItem]}` |
 | AI enrichment status | `_ai_triage_status`, `_ai_action_plan`, timer handle, launch time |
-| Config (runtime) | Module globals in `wip_dashboard.config` — mutated by `load_from_file` / `apply_overrides` / `SettingsScreen.action_save` |
-| Config (persistent) | `platformdirs.user_config_path("wip-dashboard") / "config.json"` |
-| AI triage cache | `~/.wip-dashboard/triage/<board_key>.json` |
+| Config (runtime) | Module globals in `ado_dashboard.config` — mutated by `load_from_file` / `apply_overrides` / `SettingsScreen.action_save` |
+| Config (persistent) | `platformdirs.user_config_path("ado-dashboard") / "config.json"` |
+| AI triage cache | `~/.ado-dashboard/triage/<board_key>.json` |
 | Session state (read-only) | `~/.copilot/session-state/<uuid>/workspace.yaml` + `events.jsonl` |
-| Debug log | `<repo-root>/wip-dashboard.log` (overwritten each run) |
+| Debug log | `<repo-root>/ado-dashboard.log` (overwritten each run) |
