@@ -1,6 +1,7 @@
 """Tests for ado_dashboard.investigation — launcher adapter interface."""
 
 import pytest
+
 from ado_dashboard import investigation
 
 

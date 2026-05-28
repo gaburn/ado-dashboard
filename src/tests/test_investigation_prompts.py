@@ -1,6 +1,5 @@
 """Tests for ado_dashboard.investigation_prompts — pure prompt builders."""
 
-import pytest
 from ado_dashboard import investigation_prompts
 
 
