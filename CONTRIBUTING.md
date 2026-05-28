@@ -46,6 +46,10 @@ src/tests/              # pytest suite
 docs/                   # Architecture, configuration, integration, development docs
 ```
 
+### AI Tooling (`.squad/`)
+
+This project uses an AI development team (the Squad). You'll see `.squad/` with agent charters, decisions, and history — these are the maintainer's tooling, kept in the repo for transparency. You don't need to touch them to contribute.
+
 ### Scripts
 
 | Command | Description |
@@ -65,10 +69,27 @@ docs/                   # Architecture, configuration, integration, development 
 ## Making Changes
 
 1. **Fork** the repository
-2. **Create a branch** for your change (`git checkout -b my-feature`)
+2. **Create a branch** for your change (see Branch Naming below)
 3. **Make your changes** — keep commits focused and descriptive
 4. **Test locally** — run `pytest` and `ruff check src/`
 5. **Submit a pull request** with a clear description of what changed and why
+
+### Commit Messages
+
+Use imperative mood (e.g., `fix bug` not `fixed bug`). Conventional Commits are encouraged but not required.
+
+### Branch Naming
+
+| Prefix | Example |
+|---|---|
+| `feat/` | `feat/add-sorting` |
+| `fix/` | `fix/pr-filter` |
+| `docs/` | `docs/readme-update` |
+| `chore/` | `chore/bump-deps` |
+
+### Pre-commit Hooks
+
+Install pre-commit hooks: `pre-commit install`
 
 ### Code Style
 

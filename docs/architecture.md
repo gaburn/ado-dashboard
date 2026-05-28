@@ -151,3 +151,16 @@ Settings returns `Screen[bool]` — `True` on save, `False` on cancel.
 | AI triage cache | `~/.ado-dashboard/triage/<board_key>.json` |
 | Session state (read-only) | `~/.copilot/session-state/<uuid>/workspace.yaml` + `events.jsonl` |
 | Debug log | `<repo-root>/ado-dashboard.log` (overwritten each run) |
+
+---
+
+## Key Modules (Quick Reference)
+
+| Module | Role |
+|---|---|
+| `config.py` | 4-layer config resolution (CLI > env > file > defaults); module globals |
+| `models.py` | Pure dataclasses: `PullRequest`, `WorkItem`, `TriageItem`, `CopilotSession` |
+| `ado_client.py` | `az repos` / `az boards` async wrappers with friendly error translation |
+| `triage_client.py` | Runs `Get-TriageItems.ps1`; extracts JSON from mixed stdout |
+| `session_client.py` | Parses `workspace.yaml` + `events.jsonl`; launches/resumes sessions in Windows Terminal |
+| `window_focus.py` | Win32 ctypes window-focus by PID ancestor chain (no PowerShell) |

@@ -42,10 +42,10 @@ The following are generally **not** considered security issues:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| Current major | ✅ Yes |
+| Latest release (0.x) | ✅ Yes |
 | Older versions | ❌ No |
 
-Only the current major version receives security updates. We recommend always using the latest release.
+Only the latest release receives security updates. We recommend always using the latest release.
 
 ## Disclosure Policy
 

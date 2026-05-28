@@ -1,6 +1,6 @@
 # ADO Dashboard
 
-Interactive terminal dashboard for Azure DevOps — pull requests, reviews, work items, triage, and Copilot sessions in one place.
+ADO Dashboard is a keyboard-driven terminal dashboard for Azure DevOps (ADO). If you spend your day reviewing PRs, triaging work items, and managing AI coding sessions — this keeps all of it in your terminal, no browser tabs required.
 
 [![CI](https://github.com/gaburn/ado-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/gaburn/ado-dashboard/actions/workflows/ci.yml)
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)
@@ -8,7 +8,10 @@ Interactive terminal dashboard for Azure DevOps — pull requests, reviews, work
 
 ## Install & Run
 
+<!-- TODO: add screenshot or asciinema GIF here — biggest UX win is showing the TUI in action -->
+
 ```bash
+git clone https://github.com/gaburn/ado-dashboard.git
 cd ado-dashboard
 pip install -e .
 ado-dashboard
@@ -111,34 +114,9 @@ ADO Dashboard is a [Textual](https://textual.textualize.io/) TUI. It calls the `
 
 ---
 
-## Architecture at a Glance
+## Architecture
 
-```
-ado-dashboard (CLI)
-  └─ WipDashboardApp (Textual App)
-       └─ DashboardScreen          ← 5-tab layout, all data workers
-            ├─ ado_client          ← az CLI subprocess wrapper (async)
-            ├─ triage_client       ← PowerShell script runner (async)
-            ├─ session_client      ← ~/.copilot/session-state scanner
-            ├─ investigation       ← pluggable InvestigationLauncher adapter`n            ├─ triage_categorizer  ← pure rule-based categorizer + AI merger
-            ├─ triage_cache        ← file cache for AI triage JSON
-            ├─ investigation_prompts ← prompt builders (delegates to launcher)
-            ├─ DetailScreen        ← single-item detail view
-            └─ SettingsScreen      ← config form with live model/agent discovery
-```
-
-All ADO communication is via the `az` CLI — no HTTP library is used. Long-running fetches run on Textual `@work` workers (async, never blocking the UI thread). AI triage results are written by the investigation backend and polled from a JSON cache file.
-
-### Key modules
-
-| Module | Role |
-|---|---|
-| `config.py` | 4-layer config resolution (CLI > env > file > defaults); module globals |
-| `models.py` | Pure dataclasses: `PullRequest`, `WorkItem`, `TriageItem`, `CopilotSession` |
-| `ado_client.py` | `az repos` / `az boards` async wrappers with friendly error translation |
-| `triage_client.py` | Runs `Get-TriageItems.ps1`; extracts JSON from mixed stdout |
-| `session_client.py` | Parses `workspace.yaml` + `events.jsonl`; launches/resumes sessions in Windows Terminal |
-| `window_focus.py` | Win32 ctypes window-focus by PID ancestor chain (no PowerShell) |
+See [docs/architecture.md](docs/architecture.md) for module map and async model.
 
 ---
 
@@ -152,3 +130,22 @@ All ADO communication is via the `az` CLI — no HTTP library is used. Long-runn
 | [`docs/investigation.md`](docs/investigation.md) | Pluggable InvestigationLauncher adapter: NoOpLauncher, AgencyLauncher, custom backends |
 | [`docs/configuration.md`](docs/configuration.md) | Full 4-layer resolution, config schema, setup wizard, in-app settings |
 | [`docs/development.md`](docs/development.md) | Running locally, tests, adding a tab, adding a settings field, CSS conventions, known cruft |
+
+---
+
+## Troubleshooting / FAQ
+
+**`az login` not authenticated**
+Run `az login` to sign in, then `az account set --subscription <name-or-id>` to select the right subscription.
+
+**No PRs or work items showing**
+Verify your org URL in the config file (`%LOCALAPPDATA%\ado-dashboard\config.json` on Windows, `~/.config/ado-dashboard/config.json` on Linux/macOS). Re-run `ado-dashboard --setup` to reconfigure from scratch.
+
+**PowerShell not found (Triage tab)**
+Install [`pwsh`](https://github.com/PowerShell/PowerShell) or point the triage script to the Windows built-in `powershell`. PowerShell is only needed if you use the Triage tab.
+
+**Triage tab shows "No triage board configured"**
+That's expected — Triage is opt-in. Press `s` to open Settings and add a board URL.
+
+**App shows version `v0.2.1-dirty`**
+Your working tree has uncommitted changes. Commit or stash them and restart the app.
