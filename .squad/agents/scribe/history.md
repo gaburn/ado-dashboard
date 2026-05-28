@@ -53,3 +53,6 @@ Initial setup complete.
 **Decision archive status:** decisions.md now 25.3 KB (up from 8.9 KB), still under 50 KB hard gate — no archive required.
 
 **Outcome:** All 9 cross-agent decisions now centralized in `decisions.md`. No blockers remain for PyPI public ship.
+## Learnings
+
+Initial setup complete.
