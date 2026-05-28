@@ -16,7 +16,7 @@ def _get_git_build_hash() -> str:
     """
     try:
         result = subprocess.run(
-            ["git", "describe", "--always", "--dirty"],
+            ["git", "describe", "--tags", "--always", "--dirty"],
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             text=True,
