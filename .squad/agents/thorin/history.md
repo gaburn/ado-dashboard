@@ -181,6 +181,31 @@ live `WIP_DASHBOARD_REPO_ROOT` hits outside `.squad/` history files.
 
 **Rule confirmed:** Before any public ship, check `git ls-files | grep -i internal` and `git ls-files | grep _1m_` to catch internal model references. Also confirm no ghost module directories survive renames.
 
+### 2026-07-17 — Issue #3 triage: Edit Work Item Fields
+
+**Issue:** https://github.com/gaburn/ado-dashboard/issues/3
+**Decision note:** `.squad/decisions/inbox/thorin-issue-3-triage.md`
+
+**Architecture decisions made:**
+
+1. **Modal screen, not inline editing.** `EditWorkItemScreen` pushed as a Textual modal `Screen` from `detail.py` via `e` key. Inline editing rejected — accidental-edit risk too high.
+
+2. **Widget map:** `Input` for Title, `TextArea` for Description, `Select` for Type / State / Iteration Path / Area Path.
+
+3. **Save worker:** `@work(exclusive=True)` posts `SaveComplete` or `SaveFailed` (typed union: `ConcurrencyConflictError | ValidationError | ADOClientError`).
+
+4. **Optimistic concurrency is mandatory.** `rev` from `fetch_work_item_detail` must be passed to the update call. Conflict → re-fetch-and-retry prompt. Silent last-write-wins = data loss.
+
+5. **Type change gated behind a spike.** `az boards work-item update --work-item-type` support is unconfirmed; may need raw REST PATCH. Type changes also silently drop type-specific fields — requires confirmation dialog. Shipping five simpler fields first.
+
+6. **Description: plain text for v1.** `System.Description` is HTML in ADO; edit form accepts plain text. Markdown/preview is v2.
+
+7. **Allowed states are dynamic.** State `Select` repopulates when Type changes — async mid-form reload with "Loading…" disabled placeholder.
+
+**Sub-issue plan:** Four tracks (Balin: API, Thorin: screen/worker, Bofur: UX, Dwalin: tests) + one Balin spike for type-change. Posted decomposition as triage comment on issue #3.
+
+**Files expected to be created/modified:** `ado_client.py`, `models.py`, `screens/edit.py` (new), `screens/detail.py`, `tests/test_edit_screen.py` (new).
+
 ### 2026-07-17 — Demo mode: --demo flag with Tolkien fixture data
 
 **Scope:** Full demo mode implementation (feature commit on `dev` branch).
@@ -222,4 +247,28 @@ live `WIP_DASHBOARD_REPO_ROOT` hits outside `.squad/` history files.
 2. Bofur: CODE_OF_CONDUCT maintainer email placeholder (flagged in <!-- TODO --> comment)
 
 **Public ship readiness: READY** (all 8 Glóin blockers resolved; Dwalin blocker on ado_client coverage resolved; Bofur blocker on README clone step resolved; Thorin blockers on ghost module + internal refs resolved).
+
+### 2026-05-28 — Issue #3 design-phase completion: 3 parallel agents, all decisions merged
+
+**Status:** Design phase complete; 3 inbox docs merged to `.squad/decisions.md`; awaiting Thorin sign-off before implementation.
+
+**Agents & deliverables:**
+- **Balin (API specialist):** Issue #3 API Layer Design — `az` CLI transport (v1), rev-check client-side, new exceptions `WorkItemConflictError` / `WorkItemValidationError`, caching 24h states / 1h trees, REST helpers for metadata. Type-change spike: supported via `--work-item-type` flag but **recommended deferral to issue #3-f** due to data-loss UX complexity.
+- **Bofur (UX specialist):** Issue #3 EditWorkItemScreen UX Spec — one-column full-screen form, key bindings (`e` open, `Ctrl+S` save, `Esc` cancel), plain-text description, inline field validation, Type-change confirmation modal with field-loss warning.
+- **Dwalin (Testing specialist):** Issue #3 Comprehensive Test Plan — 52 total cases: 17 API (7 success + 10 failure), 17 Pilot screen, 8 snapshots, 2 integration (slow). Mocking boundary: `asyncio.create_subprocess_exec` (consistent with existing `test_ado_client.py`). 10 open team questions flagged for resolution. Coverage targets: 100% API + error types, ≥90% screen.
+
+**Critical Finding — Type-Change Deferral (Balin):**
+- Current: API surface exposed (`change_work_item_type()` in signature), TUI not wired.
+- Risk: Type-specific fields silently dropped by ADO (data loss), state remapping needed.
+- Decision: Defer to issue #3-f; design confirmation modal + field-loss UX before implementation.
+- Impact: Tracks #3-b (scaffold) and #3-c (UX) proceed without Type combobox; no blocker.
+
+**Merge outcome:**
+- ✓ 3 decisions appended to `.squad/decisions.md` (sections: Balin API, Bofur UX, Dwalin tests)
+- ✓ 3 inbox files deleted (balin-issue-3-api-design.md, bofur-issue-3-edit-ux.md, dwalin-issue-3-test-plan.md)
+- ✓ Orchestration log: `2026-05-28T22-58-57Z-design-spike-issue-3.md`
+- ✓ Session log: `2026-05-28T22-58-57Z-issue-3-design-spike.md`
+- ✓ No archiving triggered (decisions.md 8953 bytes, under 20480 threshold)
+
+**Next step:** Thorin reviews design decisions, confirms type-change deferral, gates implementation work for tracks #3-a (Balin), #3-b (Thorin scaffolding), #3-c (Bofur screen), #3-d (Dwalin tests). Issue #3 implementation can proceed once sign-off complete.
 

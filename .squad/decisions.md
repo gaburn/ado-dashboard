@@ -203,6 +203,49 @@ file itself is clean, not just the in-memory value.
   Old config location: `%LOCALAPPDATA%\wip-dashboard\wip-dashboard\config.json`.
   User action: run `ado-dashboard --setup` to repopulate the new config.
 
+### Decision: Issue #3 — Work-Item Field Editing — API Layer Design
+
+**Date:** 2026-05-28  
+**Author:** Balin (ADO API specialist)  
+**Status:** Proposed — awaiting Thorin sign-off  
+**File:** `.squad/decisions/inbox/balin-issue-3-api-design.md`
+
+#### Summary
+
+API design for edit work-item operations in issue #3 tracks #3-a, #3-e. Transport: stay on `az` CLI for v1 (no PAT storage). Support: Title, State, Description, Iteration Path, Area Path, Type. Revision concurrency: client-side check before write. Type-change spike (#3-e) findings: endpoint exists (`PATCH /workitems/{id}?$type=...`) but deferred to follow-up due to data-loss UX complexity. Exceptions: `WorkItemConflictError`, `WorkItemValidationError`, `ADOAuthError`. Caching: in-process 24h TTL for states, 1h for trees.
+
+#### Key Decision: Type-Change Deferral
+
+Type-change carries data-loss risk (fields not on new type are silently dropped) and requires confirmation modal listing dropped fields. Recommendation: **defer to issue #3-f**. Expose API surface (`change_work_item_type()`) but do not wire up in TUI (no Type combobox enabled in v1).
+
+---
+
+### Decision: Issue #3 Edit Work Item Screen — UX Specification
+
+**Date:** 2026-05-28  
+**Author:** Bofur  
+**Status:** UX spec complete; Thorin owns implementation; awaiting Balin API contract & Dwalin test plan  
+**File:** `.squad/decisions/inbox/bofur-issue-3-edit-ux.md`
+
+#### Summary
+
+Full-screen one-column edit form (calm, matches Settings screen). Fields: Type (dropdown, destructive confirmation), Title (required input), State (dropdown, constrained by Type), Iteration Path (searchable with fallback typed entry), Area Path (same as Iteration), Description (plain-text multi-line). Plain text in terminal — HTML conversion is future feature. Key bindings: `e` from dashboard/detail to open, `Ctrl+S` save, `Esc` cancel (dirty-check modal if dirty), `Tab`/`Shift+Tab` navigation, `Ctrl+E` expand description, `?` help. Footer responsive: "Unsaved changes *" suffix while dirty. Validation: inline errors for fields, modal for Type confirmation, banner for save-wide issues. Accessibility: no color-only signals (`*` for dirty, `!` for invalid); dark theme; static copy for save state.
+
+---
+
+### Decision: Issue #3 — Edit Work Item Flow — Comprehensive Test Plan
+
+**Date:** 2026-07-17  
+**Author:** Dwalin  
+**Status:** Proposed — awaiting Balin API contract & Bofur UX spec  
+**File:** `.squad/decisions/inbox/dwalin-issue-3-test-plan.md`
+
+#### Summary
+
+52-case test plan spanning API layer (17 update_work_item cases: 7 success, 10 failure), screen layer (17 Pilot tests: form navigation, dirty-state, error handling, key bindings), snapshots (8 fixed-size renders), and integration (2 slow recorded cycles). Mocking boundary: `asyncio.create_subprocess_exec` (consistent with existing `test_ado_client.py`; swap to `respx` only if Balin's spike recommends httpx). Coverage targets: 100% for new API functions and error types, ≥90% for screen, 100% for diff-only changes in detail.py. 10 open questions for team (cache multi-process behavior, description format, type-change deferral, exception hierarchy, flat vs. tree paths, key bindings, dirty cue, offline behavior, httpx decision, demo-mode). Fixtures: 10 new + promoted from test_ado_client.
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
