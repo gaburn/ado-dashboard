@@ -1,6 +1,6 @@
 # Squad Team
 
-> wip-dashboard
+> ado-dashboard
 
 ## Coordinator
 
@@ -22,7 +22,7 @@
 
 ## Project Context
 
-- **Project:** wip-dashboard — a Python Textual TUI for browsing Azure DevOps work items and PRs
+- **Project:** ado-dashboard — a Python Textual TUI for browsing Azure DevOps work items and PRs
 - **Stack:** Python 3.11+, Textual, httpx, pytest + Textual Pilot, pipx-installable
 - **Created:** 2026-05-08
 - **Cast:** Lord of the Rings — Thorin's Company (the Khazad)

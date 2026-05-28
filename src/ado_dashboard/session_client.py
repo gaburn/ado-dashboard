@@ -10,8 +10,8 @@ import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
 
-from wip_dashboard import config
-from wip_dashboard.models import CopilotSession
+from ado_dashboard import config
+from ado_dashboard.models import CopilotSession
 
 log = logging.getLogger(__name__)
 
@@ -111,13 +111,13 @@ def launch_investigation(
 ) -> tuple[bool, str]:
     """Launch a new investigation session via the configured launcher.
 
-    Delegates to :func:`wip_dashboard.investigation.get_launcher` so the
+    Delegates to :func:`ado_dashboard.investigation.get_launcher` so the
     backend can be swapped without touching call sites.  See
     ``docs/investigation.md`` for how to configure a launcher.
 
     Returns ``(True, msg)`` on success, ``(False, msg)`` on failure.
     """
-    from wip_dashboard.investigation import get_launcher
+    from ado_dashboard.investigation import get_launcher
     return get_launcher().launch(prompt, title=title, cwd=cwd, model=model, agent=agent)
 
 

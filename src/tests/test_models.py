@@ -1,7 +1,7 @@
-"""Tests for wip_dashboard.models — dataclass parsers and edge cases."""
+"""Tests for ado_dashboard.models — dataclass parsers and edge cases."""
 
 from datetime import UTC, datetime
-from wip_dashboard.models import PullRequest, WorkItem, TriageItem, TriageAnalysis
+from ado_dashboard.models import PullRequest, WorkItem, TriageItem, TriageAnalysis
 
 
 def test_pull_request_from_az_json_basic():

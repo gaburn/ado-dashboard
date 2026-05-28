@@ -11,9 +11,9 @@ from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Input, Label, Select, Static, Switch
 
-from wip_dashboard import config
-from wip_dashboard.investigation import get_launcher
-from wip_dashboard.setup_wizard import save_config
+from ado_dashboard import config
+from ado_dashboard.investigation import get_launcher
+from ado_dashboard.setup_wizard import save_config
 
 log = logging.getLogger(__name__)
 
@@ -105,6 +105,10 @@ class SettingsScreen(Screen[bool]):
                 else:
                     yield Input(id=key, placeholder=label_text)
             yield Label("Triage Boards")
+            yield Static(
+                "See docs/triage-and-investigation.md for setup instructions.",
+                classes="settings-hint",
+            )
             yield Vertical(id="boards-list")
             yield Button("＋ Add Board", id="add-board", variant="default")
             yield Label("Investigation Model")

@@ -1,7 +1,7 @@
-"""Tests for wip_dashboard.investigation_prompts — pure prompt builders."""
+"""Tests for ado_dashboard.investigation_prompts — pure prompt builders."""
 
 import pytest
-from wip_dashboard import investigation_prompts
+from ado_dashboard import investigation_prompts
 
 
 def test_board_key_from_url_extracts_team():

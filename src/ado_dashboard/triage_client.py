@@ -9,8 +9,8 @@ import shutil
 from pathlib import Path
 from urllib.parse import unquote
 
-from wip_dashboard import config
-from wip_dashboard.models import TriageItem
+from ado_dashboard import config
+from ado_dashboard.models import TriageItem
 
 log = logging.getLogger(__name__)
 

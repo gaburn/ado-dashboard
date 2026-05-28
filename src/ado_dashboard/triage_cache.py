@@ -7,9 +7,9 @@ import logging
 import time
 from pathlib import Path
 
-from wip_dashboard import config
-from wip_dashboard.investigation_prompts import board_key_from_url
-from wip_dashboard.models import TriageAnalysis
+from ado_dashboard import config
+from ado_dashboard.investigation_prompts import board_key_from_url
+from ado_dashboard.models import TriageAnalysis
 
 log = logging.getLogger(__name__)
 

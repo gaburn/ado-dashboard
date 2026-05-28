@@ -127,7 +127,7 @@ def run_setup(existing_config: dict | None = None) -> dict:
 
     print()
     print("=" * 60)
-    print("  WIP Dashboard — First-Run Setup")
+    print("  ADO Dashboard — First-Run Setup")
     print("=" * 60)
     print()
 

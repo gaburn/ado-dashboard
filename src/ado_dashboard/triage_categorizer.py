@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-from wip_dashboard.models import TriageAnalysis, TriageItem
+from ado_dashboard.models import TriageAnalysis, TriageItem
 
 # ---------------------------------------------------------------------------
 # Category keywords (compiled once)

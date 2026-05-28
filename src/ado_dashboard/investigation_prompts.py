@@ -1,18 +1,18 @@
 """Prompt builders for launching investigation sessions.
 
 All prompt building is delegated to the active ``InvestigationLauncher``
-(see :mod:`wip_dashboard.investigation`).  These module-level functions are
+(see :mod:`ado_dashboard.investigation`).  These module-level functions are
 thin wrappers kept for backward compatibility with existing call sites.
 
 To customise prompts, configure a different launcher before the app starts::
 
-    from wip_dashboard import investigation
+    from ado_dashboard import investigation
     investigation.set_launcher(MyLauncher())
 """
 
 from __future__ import annotations
 
-from wip_dashboard.investigation import get_launcher
+from ado_dashboard.investigation import get_launcher
 
 
 def board_key_from_url(url: str) -> str:

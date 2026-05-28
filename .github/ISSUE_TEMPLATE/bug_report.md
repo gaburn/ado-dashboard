@@ -14,7 +14,7 @@ A clear and concise description of what the bug is.
 
 Steps to reproduce the behavior:
 
-1. Run `wip-dashboard ...`
+1. Run `ado-dashboard ...`
 2. Navigate to '...'
 3. Press '...'
 4. See error
@@ -31,7 +31,7 @@ If applicable, paste a terminal screenshot or the relevant log lines.
 
 - **OS:** [e.g., Windows 11, macOS 14, Ubuntu 22.04]
 - **Python version:** [e.g., 3.12.2 — `python --version`]
-- **wip-dashboard version:** [e.g., 0.2.0 — shown in the title bar, or `pip show wip-dashboard`]
+- **ado-dashboard version:** [e.g., 0.2.0 — shown in the title bar, or `pip show ado-dashboard`]
 - **Terminal:** [e.g., Windows Terminal, iTerm2, gnome-terminal]
 - **Azure CLI version:** [`az --version`]
 

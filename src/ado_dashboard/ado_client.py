@@ -7,8 +7,8 @@ import json
 import logging
 import shutil
 
-from wip_dashboard import config
-from wip_dashboard.models import PullRequest, WorkItem
+from ado_dashboard import config
+from ado_dashboard.models import PullRequest, WorkItem
 
 log = logging.getLogger(__name__)
 

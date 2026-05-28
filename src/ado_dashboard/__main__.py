@@ -1,4 +1,4 @@
-"""Entry point for `python -m wip_dashboard` and the `wip-dashboard` CLI command."""
+"""Entry point for `python -m ado_dashboard` and the `ado-dashboard` CLI command."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 def _parse_args() -> argparse.Namespace:
     """Build and parse CLI arguments."""
     parser = argparse.ArgumentParser(
-        prog="wip-dashboard",
+        prog="ado-dashboard",
         description="Interactive terminal dashboard for Azure DevOps PRs and work items.",
     )
     parser.add_argument(
@@ -46,11 +46,11 @@ def _parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    """Launch the WIP Dashboard TUI application."""
+    """Launch the ADO Dashboard TUI application."""
     args = _parse_args()
 
-    from wip_dashboard import config
-    from wip_dashboard.setup_wizard import (
+    from ado_dashboard import config
+    from ado_dashboard.setup_wizard import (
         config_file_exists,
         load_config,
         run_setup,
@@ -64,7 +64,7 @@ def main() -> None:
         if config_data:
             saved_path = save_config(config_data)
             print(f"\n✓ Configuration saved to {saved_path}")
-            print("  Run `wip-dashboard --setup` to reconfigure at any time.\n")
+            print("  Run `ado-dashboard --setup` to reconfigure at any time.\n")
 
     # Load config file into module globals.
     file_data = load_config()
@@ -74,20 +74,20 @@ def main() -> None:
     config.apply_overrides(args)
 
     # File logging for debugging window-focus and session issues.
-    log_file = Path(__file__).resolve().parent.parent.parent / "wip-dashboard.log"
+    log_file = Path(__file__).resolve().parent.parent.parent / "ado-dashboard.log"
     file_handler = logging.FileHandler(log_file, mode="w", encoding="utf-8")
     file_handler.setFormatter(
         logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
     )
-    logging.getLogger("wip_dashboard").setLevel(logging.DEBUG)
-    logging.getLogger("wip_dashboard").addHandler(file_handler)
+    logging.getLogger("ado_dashboard").setLevel(logging.DEBUG)
+    logging.getLogger("ado_dashboard").addHandler(file_handler)
 
     # Capture Textual framework-level CSS/styling logs for diagnostics.
     logging.getLogger("textual").setLevel(logging.DEBUG)
     logging.getLogger("textual").addHandler(file_handler)
 
     # Launch TUI.
-    from wip_dashboard.app import WipDashboardApp
+    from ado_dashboard.app import WipDashboardApp
 
     WipDashboardApp().run()
 

@@ -1,8 +1,8 @@
-"""Tests for wip_dashboard.triage_client — negative test for missing script."""
+"""Tests for ado_dashboard.triage_client — negative test for missing script."""
 
 import pytest
-from wip_dashboard import triage_client
-from wip_dashboard import config
+from ado_dashboard import triage_client
+from ado_dashboard import config
 
 
 def test_resolve_script_path_raises_when_not_configured(monkeypatch):

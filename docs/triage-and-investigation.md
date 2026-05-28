@@ -4,14 +4,14 @@
 
 ## Get-TriageItems.ps1 Contract
 
-**Location:** `src/wip_dashboard/scripts/Get-TriageItems.ps1.example` (template).
+**Location:** `src/ado_dashboard/scripts/Get-TriageItems.ps1.example` (template).
 
 To use the triage tab:
 1. Copy `Get-TriageItems.ps1.example` to a location you own.
 2. Fill in your area paths, team names, and ADO org/project (all marked with `<YOUR_...>` placeholders).
 3. Set `triage_script_path` in your config (Settings screen → `triage_script_path`, or `config.json`).
 
-wip-dashboard does **not** auto-resolve the bundled `.example` file.  If `triage_script_path` is not set, the triage tab will show an error prompting you to configure it.
+ADO Dashboard does **not** auto-resolve the bundled `.example` file.  If `triage_script_path` is not set, the triage tab will show an error prompting you to configure it.
 
 ### Inputs (CLI Parameters)
 
@@ -94,7 +94,7 @@ When `config.AI_TRIAGE_MODE == "copilot"` (default), the dashboard attempts AI e
 
 ### Cache file format
 
-Written by the investigation session to `~/.wip-dashboard/triage/<board_key>.json`:
+Written by the investigation session to `~/.ado-dashboard/triage/<board_key>.json`:
 
 ```json
 {

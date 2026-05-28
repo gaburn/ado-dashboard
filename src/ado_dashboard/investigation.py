@@ -1,6 +1,6 @@
 """Investigation adapter interface and built-in implementations.
 
-The ``InvestigationLauncher`` Protocol defines how wip-dashboard launches
+The ``InvestigationLauncher`` Protocol defines how ado-dashboard launches
 investigation sessions, builds prompts, and discovers available models and
 agents.  Swap in your own implementation to integrate with any AI assistant.
 
@@ -19,7 +19,7 @@ Built-in adapters
 Usage
 -----
     # In app startup — pick a launcher (defaults to NoOpLauncher):
-    from wip_dashboard import investigation
+    from ado_dashboard import investigation
     investigation.set_launcher(investigation.AgencyLauncher())
 
     # Anywhere else:
@@ -244,7 +244,7 @@ class AgencyLauncher:
         if len(title) > self._MAX_TITLE_LEN:
             title = title[: self._MAX_TITLE_LEN - 1] + "…"
 
-        tmp_dir = Path(tempfile.gettempdir()) / "wip-dashboard"
+        tmp_dir = Path(tempfile.gettempdir()) / "ado-dashboard"
         tmp_dir.mkdir(parents=True, exist_ok=True)
 
         prompt_file = tmp_dir / "prompt.txt"
@@ -327,7 +327,7 @@ class AgencyLauncher:
 
     def discover_agents(self) -> list[tuple[str, str]]:
         """Discover available agents from personal and repo agent directories."""
-        from wip_dashboard import config as _config
+        from ado_dashboard import config as _config
 
         agents: list[tuple[str, str]] = [
             ("Orchestrator", "orchestrator"),

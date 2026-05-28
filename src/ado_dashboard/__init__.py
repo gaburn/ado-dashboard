@@ -1,9 +1,9 @@
-"""WIP Dashboard — interactive terminal dashboard for Azure DevOps PRs and work items."""
+"""ADO Dashboard — interactive terminal dashboard for Azure DevOps PRs and work items."""
 
 import subprocess
 from pathlib import Path
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 _PACKAGE_DIR = str(Path(__file__).resolve().parent)
 

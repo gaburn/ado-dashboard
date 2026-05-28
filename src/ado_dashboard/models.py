@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Self
 
-from wip_dashboard import config
+from ado_dashboard import config
 
 
 # ---------------------------------------------------------------------------

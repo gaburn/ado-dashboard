@@ -10,16 +10,16 @@ cd wip-dashboard
 pip install -e .
 
 # First run — triggers the setup wizard
-wip-dashboard
+ado-dashboard
 
 # Re-run the wizard
-wip-dashboard --setup
+ado-dashboard --setup
 
 # Override config at the CLI without editing files
-wip-dashboard --org https://dev.azure.com/myorg --user me@example.com
+ado-dashboard --org https://dev.azure.com/myorg --user me@example.com
 ```
 
-Logs are written to `<repo-root>/wip-dashboard.log` (overwritten each run). Set `logging.DEBUG` is already on for `wip_dashboard.*` and `textual.*`.
+Logs are written to `<repo-root>/ado-dashboard.log` (overwritten each run). Set `logging.DEBUG` is already on for `ado_dashboard.*` and `textual.*`.
 
 ---
 
@@ -70,7 +70,7 @@ The package uses `hatchling` as its build backend. No test runner config exists 
 
 ## Style / CSS Conventions
 
-Styles live in `src/wip_dashboard/styles/app.tcss` (a single file; Textual CSS, not standard CSS).
+Styles live in `src/ado_dashboard/styles/app.tcss` (a single file; Textual CSS, not standard CSS).
 
 Key palette variables declared at the top:
 
@@ -110,6 +110,6 @@ The following files in `src/` are scratch/debug artifacts from development and a
 | `src/PR_14992655_threads.json` | Raw PR thread data blob (debug capture) |
 | `src/PR_14992655_threads_clean.json` | Cleaned PR thread data blob (debug capture) |
 
-These files sit in `src/` outside the `wip_dashboard` package directory, so they are excluded from wheel builds (hatch only packages `src/wip_dashboard`). They are safe to delete when no longer needed for reference.
+These files sit in `src/` outside the `ado_dashboard` package directory, so they are excluded from wheel builds (hatch only packages `src/ado_dashboard`). They are safe to delete when no longer needed for reference.
 
 **Ambiguity note:** It is unclear whether `parse_*.py` / `find_threads.py` / `check_status.py` represent prototype code that was later incorporated into `Get-TriageItems.ps1`'s inline Python, or are independent investigations. Review before deleting if in doubt.
