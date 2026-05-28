@@ -183,3 +183,73 @@ adit, forge, mithril, standup, porch, wip, carry, bench, slate, draft, flux, dec
 
 Follow-up flags: GitHub repo rename pending; env var name check (`WIP_DASHBOARD_REPO_ROOT` → `ADO_DASHBOARD_REPO_ROOT`); `.github/ISSUE_TEMPLATE/bug_report.md` contains user-facing references; GitHub URLs in `CODE_OF_CONDUCT.md` and `SECURITY.md` need update post-rename.
 
+---
+
+# Decision: PR #1 Merge Conflict Resolution Strategy
+
+**Date:** 2026-07-17  
+**Author:** Thorin (Lead Architect)  
+**PR:** #1 — dev → main  
+**Commit:** 57a753b
+
+---
+
+## Context
+
+Branch `dev` diverged from `main` at commit `f515967` (the first commit). Main received 5 independent commits that duplicated work already done on dev (same intent, different hashes): OSS scrub, CI setup, ruff autofixes, starter test suite, README CI/license badges + LICENSE year bump. This produced 18 add/add or content conflicts on merge.
+
+The fundamental problem: two contributors applied the same conceptual changes (rename, style, CI) to separate branches without coordinating. By the time the merge was attempted, both branches had valid but incompatible versions of the same files.
+
+---
+
+## Resolution Rules Applied
+
+### 1. One side clearly supersedes the other → `git checkout --ours` or `--theirs`
+
+Files where dev's version was strictly newer (post-rename `ado_dashboard` imports, `ado-dashboard` CLI references):
+- **Tests (6):** `--ours` — dev's `ado_dashboard` imports are correct; main's `wip_dashboard` imports would fail
+- **docs/ (6):** `--ours` — dev has post-rename "ADO Dashboard" branding
+- **CONTRIBUTING.md:** `--ours` — post-rename `ado-dashboard` CLI references
+- **.github/ISSUE_TEMPLATE/bug_report.md:** `--ours` — post-rename `ado-dashboard` CLI references
+- **pyproject.toml:** `--ours` — `ado-dashboard` name, `0.2.1` version, `ado_dashboard` package scripts
+
+Files where main's version had a distinct improvement dev lacked:
+- **LICENSE:** `--theirs` — 2026 copyright year (main's update is unambiguously correct and forward)
+
+### 2. Both sides made distinct, additive contributions → manual merge
+
+- **README.md:** dev's "ADO Dashboard" title + `ado-dashboard` commands; main's CI workflow badge + MIT license badge. Both contributions are valuable and non-overlapping.
+- **.gitignore:** dev had squad runtime ignore patterns (logs, inbox, sessions, .squad-workstream); main had squad-framework-exclusion patterns (keeping .squad/ off main entirely). Union is correct — both sets of rules are needed on the dev branch.
+
+---
+
+## What Was NOT Done (and why)
+
+- Did not take main's tests — they import `wip_dashboard` which no longer exists as the active package.
+- Did not take main's docs — they reference "WIP Dashboard" (old name).
+- Did not lose main's CI badges — they were cherry-picked into the README merge.
+- Did not take main's pyproject.toml — it would downgrade the version and revert the rename.
+
+---
+
+## For Future Contributors Facing Similar Branch Divergence
+
+1. **Identify the "source of truth" for each file class.** If one branch has a rename/refactor that the other lacks, that branch owns all files touching that rename. Use `--ours` or `--theirs` wholesale.
+
+2. **Use `git show :2:<file>` and `git show :3:<file>`** to inspect both sides before resolving. Do not trust conflict markers alone for large files.
+
+3. **Additive-only files need union, not choice.** `.gitignore`, dependency lists, env var tables — always union. Choosing one side discards valid rules.
+
+4. **Test after every batch of resolutions.** Running `pytest` before committing the merge caught zero regressions here, validating the `--ours` strategy for tests.
+
+5. **`mergeable: MERGEABLE` vs `mergeStateStatus: BLOCKED`** — after resolving conflicts and pushing, MERGEABLE means no conflicts. BLOCKED means branch protection rules (required reviews) — that is expected and correct.
+
+---
+
+## Outcome
+
+- All 18 conflicts resolved, 0 content lost
+- 79 tests pass
+- PR #1: `mergeable: MERGEABLE`
+- Pushed: `dev` at `57a753b`
+
