@@ -6,7 +6,7 @@ from textual.app import App
 from textual.binding import Binding
 from textual.theme import Theme
 
-from ado_dashboard import __build__, __version__
+from ado_dashboard import __build__
 from ado_dashboard.screens.dashboard import DashboardScreen
 
 # Custom theme extending textual-dark with high-contrast colors.
@@ -30,7 +30,7 @@ class WipDashboardApp(App):
 
     CSS_PATH = "styles/app.tcss"
     TITLE = "ADO Dashboard"
-    SUB_TITLE = f"ADO PRs, Work Items, On-Call Triage, Copilot Sessions — v{__version__} ({__build__})"
+    SUB_TITLE = f"ADO PRs, Work Items, On-Call Triage, Copilot Sessions — {__build__}"
 
     BINDINGS = [
         Binding("q", "quit", "Quit"),
