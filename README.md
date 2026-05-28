@@ -2,7 +2,9 @@
 
 Interactive terminal dashboard for Azure DevOps — pull requests, reviews, work items, triage, and Copilot sessions in one place.
 
+[![CI](https://github.com/gaburn/wip-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/gaburn/wip-dashboard/actions/workflows/ci.yml)
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 ## Install & Run
 

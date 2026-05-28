@@ -20,3 +20,10 @@ dist/
 *.log
 .copilot/
 ~/.wip-dashboard/
+
+# Squad framework lives only on the dev branch — keep it out of main
+# even if a careless merge brings it in.
+.squad/
+.github/agents/squad.agent.md
+.github/workflows/squad-*.yml
+.github/workflows/sync-squad-labels.yml
