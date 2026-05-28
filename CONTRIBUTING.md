@@ -14,8 +14,8 @@ Thanks for your interest in contributing! ADO Dashboard is a Textual TUI for man
 ### Setup
 
 ```bash
-git clone https://github.com/gaburn/wip-dashboard.git
-cd wip-dashboard
+git clone https://github.com/gaburn/ado-dashboard.git
+cd ado-dashboard
 pip install -e ".[dev]"
 ado-dashboard
 ```
@@ -83,7 +83,7 @@ See [`docs/architecture.md`](./docs/architecture.md) for the module map, async/w
 
 ## Reporting Issues
 
-Use [GitHub Issues](https://github.com/gaburn/wip-dashboard/issues) to report bugs or request features. Include:
+Use [GitHub Issues](https://github.com/gaburn/ado-dashboard/issues) to report bugs or request features. Include:
 
 - What you expected to happen
 - What actually happened

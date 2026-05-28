@@ -6,7 +6,7 @@ We take the security of this project seriously. If you discover a security vulne
 
 **Please use GitHub's private vulnerability reporting feature:**
 
-👉 [Report a vulnerability](https://github.com/gaburn/wip-dashboard/security/advisories/new)
+👉 [Report a vulnerability](https://github.com/gaburn/ado-dashboard/security/advisories/new)
 
 **Do NOT open a public issue for security vulnerabilities.**
 
