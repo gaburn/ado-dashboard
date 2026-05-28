@@ -38,9 +38,9 @@ Remove all internal identifiers in a single focused session.  Deliver a fully OS
 
 **Decision:** Add `TRIAGE_PR_REPO` config field (empty default).  Skip PR linkification when unset.
 
-### Env var rename: BAND_REPO_ROOT → WIP_DASHBOARD_REPO_ROOT
+### Env var rename: (legacy name) → WIP_DASHBOARD_REPO_ROOT
 
-**Decision:** New env var `WIP_DASHBOARD_REPO_ROOT`; `BAND_REPO_ROOT` still checked as deprecated fallback to avoid breaking existing users.
+**Decision:** New env var `WIP_DASHBOARD_REPO_ROOT`; the legacy name is still checked as a deprecated fallback to avoid breaking existing users.
 
 ### Defaults cleared
 

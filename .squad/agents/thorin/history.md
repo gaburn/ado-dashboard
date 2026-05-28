@@ -46,7 +46,7 @@
 - Users implement the Protocol and call `set_launcher(MyLauncher())` at app startup.
 
 **Config changes:**
-- `BAND_REPO_ROOT` env var renamed to `WIP_DASHBOARD_REPO_ROOT` (BAND_REPO_ROOT still checked as deprecated fallback).
+- Legacy env var renamed to `WIP_DASHBOARD_REPO_ROOT` (legacy name still checked as deprecated fallback).
 - `TRIAGE_BOARD_OPTIONS` / `TRIAGE_BOARD` defaults changed from internal URLs to `[]` / `""`.
 - Added `TRIAGE_PR_REPO` config field — required for PR linkification in triage tab; empty by default.
 - `INVESTIGATION_AGENT` default changed from `"orchestrator"` to `""`.
