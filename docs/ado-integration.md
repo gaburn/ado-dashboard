@@ -1,6 +1,6 @@
 # ADO Integration
 
-WIP Dashboard calls the `az` CLI (Azure CLI with the `azure-devops` extension) as an async subprocess. There is no direct HTTP or ADO SDK usage.
+ADO Dashboard calls the `az` CLI (Azure CLI with the `azure-devops` extension) as an async subprocess. There is no direct HTTP or ADO SDK usage.
 
 ---
 
@@ -63,7 +63,7 @@ Work items are fetched with a two-level parent walk: the initial WIQL result is 
 | `'az repos' is not recognized` | Same extension message. |
 | Anything else | Raw exit code + first 1000 chars of stderr. |
 
-All fetch calls in `DashboardScreen._load_data` are wrapped in `try/except Exception`; failures surface as `self.notify(...)` toasts with `severity="error"` and log to `wip-dashboard.log`. Tabs remain visible with empty data rather than crashing.
+All fetch calls in `DashboardScreen._load_data` are wrapped in `try/except Exception`; failures surface as `self.notify(...)` toasts with `severity="error"` and log to `ado-dashboard.log`. Tabs remain visible with empty data rather than crashing.
 
 ---
 

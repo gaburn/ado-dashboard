@@ -1,6 +1,6 @@
-# Contributing to wip-dashboard
+# Contributing to ADO Dashboard
 
-Thanks for your interest in contributing! wip-dashboard is a Textual TUI for managing Azure DevOps work items and pull requests, and contributions of all kinds are welcome.
+Thanks for your interest in contributing! ADO Dashboard is a Textual TUI for managing Azure DevOps work items and pull requests, and contributions of all kinds are welcome.
 
 ## Getting Started
 
@@ -17,17 +17,17 @@ Thanks for your interest in contributing! wip-dashboard is a Textual TUI for man
 git clone https://github.com/gaburn/wip-dashboard.git
 cd wip-dashboard
 pip install -e ".[dev]"
-wip-dashboard
+ado-dashboard
 ```
 
-On first launch the setup wizard walks you through configuration. Re-run it any time with `wip-dashboard --setup`.
+On first launch the setup wizard walks you through configuration. Re-run it any time with `ado-dashboard --setup`.
 
 ## Development
 
 ### Project Structure
 
 ```
-src/wip_dashboard/      # Package source
+src/ado_dashboard/      # Package source
   __main__.py           # Entry point + CLI argument parsing
   app.py                # Textual App subclass
   screens/              # Dashboard, detail view, settings screen
@@ -50,8 +50,8 @@ docs/                   # Architecture, configuration, integration, development 
 
 | Command | Description |
 |---|---|
-| `wip-dashboard` | Run the app locally |
-| `wip-dashboard --setup` | Re-run the configuration wizard |
+| `ado-dashboard` | Run the app locally |
+| `ado-dashboard --setup` | Re-run the configuration wizard |
 | `pytest` | Run the test suite |
 | `ruff check src/` | Lint the package |
 
@@ -75,7 +75,7 @@ docs/                   # Architecture, configuration, integration, development 
 - Type-annotated where it adds clarity; we do not enforce strict typing project-wide yet
 - Async-first for any I/O — never block the Textual event loop on `subprocess.run`; use `asyncio.create_subprocess_exec`
 - Comments only where the code needs clarification — don't over-comment
-- TCSS lives in `src/wip_dashboard/styles/app.tcss`; prefer CSS classes over inline `styles=`
+- TCSS lives in `src/ado_dashboard/styles/app.tcss`; prefer CSS classes over inline `styles=`
 
 ### Architecture Notes
 

@@ -1,7 +1,7 @@
-"""Tests for wip_dashboard.triage_categorizer — pure categorization logic."""
+"""Tests for ado_dashboard.triage_categorizer — pure categorization logic."""
 
-from wip_dashboard import triage_categorizer
-from wip_dashboard.models import TriageItem, TriageAnalysis, AITriageResult
+from ado_dashboard import triage_categorizer
+from ado_dashboard.models import AITriageResult, TriageAnalysis, TriageItem
 
 
 def _make_item(

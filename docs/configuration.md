@@ -35,15 +35,15 @@ Read at module import time (`os.environ.get`). `config.load_from_file` skips a c
 | `ADO_USER_EMAIL` | `USER_EMAIL` | `""` |
 | `TRIAGE_SCRIPT_PATH` | `TRIAGE_SCRIPT_PATH` | `""` (must be configured) |
 | `TRIAGE_BOARD` | `TRIAGE_BOARD` | First board option URL |
-| `INVESTIGATIONS_DIR` | `INVESTIGATIONS_DIR` | `~/.wip-dashboard/investigations` |
+| `INVESTIGATIONS_DIR` | `INVESTIGATIONS_DIR` | `~/.ado-dashboard/investigations` |
 | `INVESTIGATION_MODEL` | `INVESTIGATION_MODEL` | `""` (launcher default) |
 | `INVESTIGATION_AGENT` | `INVESTIGATION_AGENT` | `""` |
 | `AI_TRIAGE_MODE` | `AI_TRIAGE_MODE` | `copilot` |
-| `TRIAGE_CACHE_DIR` | `TRIAGE_CACHE_DIR` | `~/.wip-dashboard/triage` |
+| `TRIAGE_CACHE_DIR` | `TRIAGE_CACHE_DIR` | `~/.ado-dashboard/triage` |
 | `TRIAGE_CACHE_MAX_AGE` | `TRIAGE_CACHE_MAX_AGE_SECONDS` | `1800` |
 | `COPILOT_SESSION_DIR` | `COPILOT_SESSION_DIR` | `~/.copilot/session-state` |
 | `SESSION_MAX_AGE_DAYS` | `SESSION_MAX_AGE_DAYS` | `7` |
-| `WIP_DASHBOARD_REPO_ROOT` | `REPO_ROOT` | git-root auto-detected |
+| `ADO_DASHBOARD_REPO_ROOT` | `REPO_ROOT` | git-root auto-detected |
 
 **Note:**`PROJECTS` (the list used for PR queries) has no corresponding env var — it can only be set via config file, CLI `--projects`, or the in-app Settings screen.
 
@@ -55,11 +55,11 @@ Read at module import time (`os.environ.get`). `config.load_from_file` skips a c
 
 | Platform | Path |
 |---|---|
-| Windows | `%LOCALAPPDATA%\wip-dashboard\config.json` |
-| macOS | `~/Library/Application Support/wip-dashboard/config.json` |
-| Linux | `~/.config/wip-dashboard/config.json` |
+| Windows | `%LOCALAPPDATA%\ado-dashboard\config.json` |
+| macOS | `~/Library/Application Support/ado-dashboard/config.json` |
+| Linux | `~/.config/ado-dashboard/config.json` |
 
-Determined by `platformdirs.user_config_path("wip-dashboard")`.
+Determined by `platformdirs.user_config_path("ado-dashboard")`.
 
 ### Config File Schema
 
@@ -80,11 +80,11 @@ Determined by `platformdirs.user_config_path("wip-dashboard")`.
     ["My Team Board", "https://dev.azure.com/<your-org>/<your-project>/_backlogs/..."]
   ],
   "triage_pr_repo": "<your-repo-name>",
-  "investigations_dir": "~/.wip-dashboard/investigations",
+  "investigations_dir": "~/.ado-dashboard/investigations",
   "investigation_model": "",
   "investigation_agent": "",
   "ai_triage_mode": "copilot",
-  "triage_cache_dir": "~/.wip-dashboard/triage",
+  "triage_cache_dir": "~/.ado-dashboard/triage",
   "triage_cache_max_age_seconds": 1800
 }
 ```
@@ -101,7 +101,7 @@ Module-level constants in `config.py` (`_DEFAULT_ORG_URL = ""`, etc.). The appli
 
 ## Setup Wizard
 
-Run automatically on first launch (no config file) or explicitly with `wip-dashboard --setup`.
+Run automatically on first launch (no config file) or explicitly with `ado-dashboard --setup`.
 
 The wizard collects:
 
@@ -134,14 +134,14 @@ The Settings screen also provides:
 
 ```bash
 # First-time setup
-wip-dashboard --setup
+ado-dashboard --setup
 
 # Override org and user without touching the config file
-ADO_ORG_URL=https://dev.azure.com/<your-org> ADO_USER_EMAIL=me@example.com wip-dashboard
+ADO_ORG_URL=https://dev.azure.com/<your-org> ADO_USER_EMAIL=me@example.com ado-dashboard
 
 # One-shot: different projects
-wip-dashboard --projects ProjectA,ProjectB --org https://dev.azure.com/<your-org>
+ado-dashboard --projects ProjectA,ProjectB --org https://dev.azure.com/<your-org>
 
 # Disable AI triage
-AI_TRIAGE_MODE=off wip-dashboard
+AI_TRIAGE_MODE=off ado-dashboard
 ```

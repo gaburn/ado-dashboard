@@ -1,12 +1,12 @@
 # Investigation Launcher Adapter
 
-wip-dashboard supports a pluggable **investigation backend** for AI-enriched triage and item investigation sessions.
+ADO Dashboard supports a pluggable **investigation backend** for AI-enriched triage and item investigation sessions.
 
 ---
 
 ## Default: NoOpLauncher
 
-Out of the box, wip-dashboard ships with `NoOpLauncher` as the active launcher.  It is fully functional but does not open any external process:
+Out of the box, ADO Dashboard ships with `NoOpLauncher` as the active launcher.  It is fully functional but does not open any external process:
 
 - **`build_item_investigation_prompt`** / **`build_board_investigation_prompt`** — return generic markdown prompts suitable for pasting into any AI assistant.
 - **`launch`** — immediately returns `(False, "No investigation backend configured")`.
@@ -18,10 +18,10 @@ AI enrichment on the Triage tab is skipped gracefully when launch fails.
 
 ## Configuring a Custom Launcher
 
-Implement the `InvestigationLauncher` Protocol from `wip_dashboard.investigation`:
+Implement the `InvestigationLauncher` Protocol from `ado_dashboard.investigation`:
 
 ```python
-from wip_dashboard.investigation import InvestigationLauncher, set_launcher
+from ado_dashboard.investigation import InvestigationLauncher, set_launcher
 
 class MyLauncher:
     """Custom investigation backend."""
@@ -64,13 +64,13 @@ class MyLauncher:
 set_launcher(MyLauncher())
 ```
 
-Call `set_launcher()` once before the Textual app runs — for example in a `pyproject.toml` entry-point wrapper or a custom `__main__.py` that imports wip-dashboard as a library.
+Call `set_launcher()` once before the Textual app runs — for example in a `pyproject.toml` entry-point wrapper or a custom `__main__.py` that imports ado-dashboard as a library.
 
 ---
 
 ## AgencyLauncher (Microsoft-internal example)
 
-`wip_dashboard.investigation.AgencyLauncher` is a concrete implementation for teams that use the `agency` CLI tool.  It is included in the source as a reference implementation.
+`ado_dashboard.investigation.AgencyLauncher` is a concrete implementation for teams that use the `agency` CLI tool.  It is included in the source as a reference implementation.
 
 **Requirements:**
 - `agency` on `PATH`
@@ -83,7 +83,7 @@ Call `set_launcher()` once before the Textual app runs — for example in a `pyp
 
 To activate it:
 ```python
-from wip_dashboard.investigation import AgencyLauncher, set_launcher
+from ado_dashboard.investigation import AgencyLauncher, set_launcher
 set_launcher(AgencyLauncher())
 ```
 
@@ -122,7 +122,7 @@ All methods are required.  `launch` must return `(True, "")` on success or `(Fal
 ## Registry API
 
 ```python
-from wip_dashboard.investigation import get_launcher, set_launcher
+from ado_dashboard.investigation import get_launcher, set_launcher
 
 # Read the active launcher:
 launcher = get_launcher()

@@ -1,7 +1,8 @@
-"""Tests for wip_dashboard.investigation — launcher adapter interface."""
+"""Tests for ado_dashboard.investigation — launcher adapter interface."""
 
 import pytest
-from wip_dashboard import investigation
+
+from ado_dashboard import investigation
 
 
 def test_noop_launcher_board_prompt():

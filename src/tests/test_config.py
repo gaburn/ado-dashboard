@@ -1,7 +1,8 @@
-"""Tests for wip_dashboard.config — 4-layer resolution."""
+"""Tests for ado_dashboard.config — 4-layer resolution."""
 
 import pytest
-from wip_dashboard import config
+
+from ado_dashboard import config
 
 
 @pytest.fixture(autouse=True)
