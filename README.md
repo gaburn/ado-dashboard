@@ -1,6 +1,6 @@
 # ADO Dashboard
 
-ADO Dashboard is a keyboard-driven terminal dashboard for Azure DevOps (ADO). If you spend your day reviewing PRs, triaging work items, and managing AI coding sessions — this keeps all of it in your terminal, no browser tabs required.
+ADO Dashboard is a keyboard-driven terminal dashboard for Azure DevOps (ADO). If you spend your day reviewing PRs, triaging work items, and managing AI coding sessions, this keeps all of it in your terminal, no browser tabs required.
 
 [![CI](https://github.com/gaburn/ado-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/gaburn/ado-dashboard/actions/workflows/ci.yml)
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)
