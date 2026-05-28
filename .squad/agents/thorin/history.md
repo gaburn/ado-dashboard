@@ -181,3 +181,20 @@ live `WIP_DASHBOARD_REPO_ROOT` hits outside `.squad/` history files.
 
 **Rule confirmed:** Before any public ship, check `git ls-files | grep -i internal` and `git ls-files | grep _1m_` to catch internal model references. Also confirm no ghost module directories survive renames.
 
+### 2026-07-17 (evening) — Public-prep sweep complete
+
+**Audit + execution phase final state:** Five parallel audits (Thorin, Balin, Dwalin, Bofur, Glóin) identified 20 total issues (1 blocker per agent track + 2–8 recommended + polish). Four parallel execution agents (Thorin, Dwalin, Bofur, Glóin) resolved all blockers and most recommended fixes in single commits:
+- Thorin: d677636 (hygiene, ghost module, .squad/ pruning, .gitignore hardening, requirements.txt delete)
+- Bofur: ec7404e (README/CONTRIBUTING/CODE_OF_CONDUCT/templates fixes)
+- Dwalin: bcaf610 (39 ado_client tests, CI matrix expansion Ubuntu+Windows × 3.12+3.13, pre-commit config)
+- Glóin: 27201cb (pyproject.toml PEP 621 metadata, log path fix, CHANGELOG, release.yml, RELEASING.md)
+- Coordinator: b23e463 (PR #1 merge verification + health report)
+
+**118 tests pass** (39 new + 79 existing, all under 1s). CI matrix green on all 4 jobs. PR #1 merge conflicts resolved; `mergeable: MERGEABLE` status. No secrets, no ghost code, no internal references in committed tree. `.squad/` partially shipped (decision + routing + ceremonies + team + agent charters + history; scaffolding removed).
+
+**Two follow-up items flagged but not blocking release:**
+1. Bofur: README screenshot/GIF (UX win, not functional blocker)
+2. Bofur: CODE_OF_CONDUCT maintainer email placeholder (flagged in <!-- TODO --> comment)
+
+**Public ship readiness: READY** (all 8 Glóin blockers resolved; Dwalin blocker on ado_client coverage resolved; Bofur blocker on README clone step resolved; Thorin blockers on ghost module + internal refs resolved).
+

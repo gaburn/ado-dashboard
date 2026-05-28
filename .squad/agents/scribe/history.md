@@ -30,3 +30,26 @@ Agent Scribe initialized and ready for work.
 ## Learnings
 
 Initial setup complete.
+
+### 2026-07-17 (evening) — Public-prep sweep completion: decision merging
+
+**Status:** Final scribe pass for public-readiness audit + execution session.
+
+**Inbox merge:**
+- Merged 9 decision inbox files into `decisions.md`:
+  - Audits: thorin-public-audit, balin-public-audit, dwalin-public-audit, bofur-public-audit, gloin-public-audit
+  - Execution: thorin-public-prep-execution, gloin-public-prep-execution, dwalin-public-prep-execution, bofur-public-prep-execution
+- Deleted all inbox files post-merge
+
+**Orchestration log:** Skipped (`.squad/orchestration-log/` removed by design per Thorin's hygiene sweep)
+
+**Session log:** Skipped (`.squad/log/` removed by design; session capture via Thorin's history update instead)
+
+**Cross-agent updates:**
+- Updated Thorin's history.md (`.squad/agents/thorin/history.md`) with final public-prep sweep completion note, including all 5 commits + final state assessment
+
+**History summarization:** Thorin's history 13.6 KB (under 15 KB threshold) — no compression needed.
+
+**Decision archive status:** decisions.md now 25.3 KB (up from 8.9 KB), still under 50 KB hard gate — no archive required.
+
+**Outcome:** All 9 cross-agent decisions now centralized in `decisions.md`. No blockers remain for PyPI public ship.
