@@ -6,6 +6,7 @@ import asyncio
 import json
 import logging
 import shutil
+from typing import Any
 
 from ado_dashboard import config
 from ado_dashboard.models import PullRequest, WorkItem
@@ -18,6 +19,30 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 class ADOClientError(Exception):
     """Raised when an ``az`` CLI command fails."""
+
+
+class ConcurrencyError(ADOClientError):
+    """Raised when a work item was modified between read and write.
+
+    The caller's ``rev`` no longer matches the server's current revision.
+    The UI is expected to offer a refresh/merge/overwrite resolution.
+    """
+
+
+class ValidationError(ADOClientError):
+    """Raised when ADO rejects a field update as invalid (HTTP 400 class).
+
+    Examples: required field missing, value not in the allowed picklist,
+    state transition not permitted by the work-item type's workflow.
+    """
+
+
+class PermissionError(ADOClientError):  # noqa: A001 - intentional shadow within module
+    """Raised when the caller lacks write access (HTTP 401/403 class).
+
+    Named to match Python's builtin for consumer convenience; the
+    ``ADOClientError`` base disambiguates when both are imported.
+    """
 
 
 # ---------------------------------------------------------------------------
@@ -240,3 +265,283 @@ async def fetch_work_item_detail(wi_id: int) -> WorkItem:
     if not isinstance(data, dict):
         raise ADOClientError(f"Unexpected response type for work item #{wi_id}")
     return WorkItem.from_az_json(data)
+
+
+# ---------------------------------------------------------------------------
+# Work-item writes (Issue #3, track #3-a)
+# ---------------------------------------------------------------------------
+# Field-name allow-list for v1. Keeps callers from passing arbitrary System.*
+# fields (e.g. System.WorkItemType — that requires a different endpoint and is
+# explicitly deferred to issue #4).
+_EDITABLE_FIELDS: frozenset[str] = frozenset({
+    "System.Title",
+    "System.State",
+    "System.IterationPath",
+    "System.AreaPath",
+    "System.Description",
+})
+
+
+def _classify_write_error(stderr: str, returncode: int | None) -> ADOClientError:
+    """Translate ``az boards work-item update`` failures into typed errors."""
+    lower = stderr.lower()
+
+    # Auth/permission — ADO returns TF401019/TF401027 plus generic "forbidden".
+    if (
+        "tf401019" in lower
+        or "tf401027" in lower
+        or "vs403220" in lower
+        or "forbidden" in lower
+        or "not authorized" in lower
+        or "do not have permission" in lower
+        or "does not have permission" in lower
+        or "unauthorized" in lower
+    ):
+        return PermissionError(
+            "You do not have permission to update this work item.\n"
+            f"az stderr: {stderr[:500]}"
+        )
+
+    # Concurrency — rev mismatch is normally caught client-side, but the server
+    # may still reject if someone updates between our refetch and write.
+    if (
+        "vs402625" in lower
+        or "vs403357" in lower
+        or "has been updated by another" in lower
+        or "outdated revision" in lower
+        or "is not the latest revision" in lower
+        or ("rev " in lower and "mismatch" in lower)
+    ):
+        return ConcurrencyError(
+            "Work item was modified by another user between read and write. "
+            "Refresh and try again.\n"
+            f"az stderr: {stderr[:500]}"
+        )
+
+    # Validation — invalid field value, disallowed transition, required field
+    # missing. ADO uses TF237124, TF401320, "validation", "invalid value".
+    if (
+        "tf237124" in lower
+        or "tf401320" in lower
+        or "validation" in lower
+        or "invalid value" in lower
+        or "is not a valid" in lower
+        or "is required" in lower
+        or "transition" in lower and "not allowed" in lower
+    ):
+        return ValidationError(
+            f"ADO rejected the update as invalid.\naz stderr: {stderr[:500]}"
+        )
+
+    # Fall through — generic failure.
+    return ADOClientError(
+        f"az work-item update failed with code {returncode}.\nstderr: {stderr[:1000]}"
+    )
+
+
+async def update_work_item(
+    work_item_id: int,
+    rev: int,
+    field_updates: dict[str, Any],
+) -> WorkItem:
+    """Update editable fields on a work item with optimistic concurrency.
+
+    The caller passes the ``rev`` they last observed. ADO itself enforces
+    optimistic concurrency on writes — if another user updated the work item
+    in the meantime, the ``az`` CLI surfaces an error (commonly ``VS403357``)
+    which we translate into :class:`ConcurrencyError`. We do **not** do a
+    pre-write refetch; that would double round-trips and still leaves a race
+    window. The server is the source of truth.
+
+    :param work_item_id: ADO work-item ID to update.
+    :param rev: The ``rev`` value the caller last observed. Forwarded to ADO
+        so the server can detect a stale-write race.
+    :param field_updates: Mapping of ADO field name → new value. Keys must be
+        in :data:`_EDITABLE_FIELDS` (Title, State, IterationPath, AreaPath,
+        Description); other keys raise :class:`ValueError`. Type-change is
+        explicitly out of scope for v1 — see issue #4.
+    :raises ConcurrencyError: The work item was modified between read and
+        write (caller's ``rev`` is stale).
+    :raises ValidationError: ADO rejected a field value (HTTP 400 class).
+    :raises PermissionError: Caller lacks write access (HTTP 401/403 class).
+    :raises ADOClientError: Any other ``az`` CLI failure.
+    :returns: A fresh :class:`WorkItem` reflecting the post-update state.
+    """
+    if not field_updates:
+        raise ValueError("field_updates must contain at least one field")
+
+    bad_fields = set(field_updates) - _EDITABLE_FIELDS
+    if bad_fields:
+        raise ValueError(
+            f"Fields not editable in v1: {sorted(bad_fields)}. "
+            f"Allowed: {sorted(_EDITABLE_FIELDS)}. "
+            "Type-change is deferred to issue #4."
+        )
+
+    log.info(
+        "Updating work item #%d (rev=%d) fields=%s",
+        work_item_id, rev, sorted(field_updates),
+    )
+
+    # Build ``--fields k=v k2=v2`` tokens. ``az`` parses each as one string;
+    # newlines (Description) pass through unchanged.
+    field_args = [f"{key}={value}" for key, value in field_updates.items()]
+
+    args = [
+        "boards", "work-item", "update",
+        "--id", str(work_item_id),
+        "--org", config.ORG_URL,
+        "--fields", *field_args,
+    ]
+
+    try:
+        data = await _run_az(args)
+    except ADOClientError as exc:
+        # _run_az prettified a few generic stderr patterns; for the write path
+        # we re-classify into the typed conflict/validation/permission tree.
+        raise _classify_write_error(str(exc), None) from exc
+
+    if not isinstance(data, dict):
+        raise ADOClientError(
+            f"Unexpected response type for work item update #{work_item_id}"
+        )
+    return WorkItem.from_az_json(data)
+
+
+# ---------------------------------------------------------------------------
+# Metadata lookups with in-process caching
+# ---------------------------------------------------------------------------
+# Caches live for the process lifetime. ``refresh_caches()`` clears all three
+# (wired into Settings → "Refresh caches" by Thorin's screen track).
+#
+# Keys:
+#   _ALLOWED_STATES_CACHE: (project, work_item_type) → list[str]
+#   _ITERATIONS_CACHE: project → list[str]
+#   _AREAS_CACHE: project → list[str]
+_ALLOWED_STATES_CACHE: dict[tuple[str, str], list[str]] = {}
+_ITERATIONS_CACHE: dict[str, list[str]] = {}
+_AREAS_CACHE: dict[str, list[str]] = {}
+
+
+def refresh_caches() -> None:
+    """Clear all metadata caches. Call from Settings 'Refresh' affordance."""
+    _ALLOWED_STATES_CACHE.clear()
+    _ITERATIONS_CACHE.clear()
+    _AREAS_CACHE.clear()
+
+
+def _flatten_node_paths(node: dict, prefix: str = "") -> list[str]:
+    """Walk an ADO classification-node tree, yielding full path strings.
+
+    ADO returns iteration/area nodes as:
+        {"name": "Project", "children": [{"name": "Sprint 1", ...}, ...]}
+
+    The full path uses backslash separators to match the values ADO stores
+    on ``System.IterationPath`` / ``System.AreaPath``.
+    """
+    name = node.get("name", "")
+    path = f"{prefix}\\{name}" if prefix else name
+    out: list[str] = [path]
+    for child in node.get("children") or []:
+        out.extend(_flatten_node_paths(child, path))
+    return out
+
+
+async def get_allowed_states(
+    work_item_type: str,
+    current_state: str = "",  # noqa: ARG001 - reserved for v2 transition filtering
+    project: str | None = None,
+) -> list[str]:
+    """Return the list of states defined for a work-item type.
+
+    v1 returns *all* states for the type — UI is expected to default the
+    Select to ``current_state``. A future revision may filter to only the
+    transitions ADO permits from ``current_state``.
+
+    Cached per ``(project, work_item_type)`` for the process lifetime.
+    """
+    proj = project or config.PROJECT
+    cache_key = (proj, work_item_type)
+    cached = _ALLOWED_STATES_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
+    log.info("Fetching allowed states for type=%s project=%s", work_item_type, proj)
+    # REST: GET /{project}/_apis/wit/workitemtypes/{type}/states?api-version=7.1
+    # Wrapped via ``az devops invoke`` so we stay on a single transport.
+    data = await _run_az([
+        "devops", "invoke",
+        "--area", "wit",
+        "--resource", "workitemtypesstates",
+        "--route-parameters", f"project={proj}", f"type={work_item_type}",
+        "--api-version", "7.1",
+        "--org", config.ORG_URL,
+    ])
+
+    values: list[dict] = []
+    if isinstance(data, dict):
+        values = data.get("value") or []
+    elif isinstance(data, list):
+        values = data
+
+    states = [v.get("name", "") for v in values if isinstance(v, dict) and v.get("name")]
+    _ALLOWED_STATES_CACHE[cache_key] = states
+    return states
+
+
+async def get_iterations(project: str | None = None) -> list[str]:
+    """Return the flattened iteration paths available in ``project``.
+
+    Cached per project for the process lifetime.
+    """
+    proj = project or config.PROJECT
+    cached = _ITERATIONS_CACHE.get(proj)
+    if cached is not None:
+        return cached
+
+    log.info("Fetching iteration tree for project=%s", proj)
+    data = await _run_az([
+        "boards", "iteration", "project", "list",
+        "--project", proj,
+        "--org", config.ORG_URL,
+    ])
+
+    iterations: list[str] = []
+    if isinstance(data, dict):
+        iterations = _flatten_node_paths(data)
+    elif isinstance(data, list):
+        for root in data:
+            if isinstance(root, dict):
+                iterations.extend(_flatten_node_paths(root))
+
+    _ITERATIONS_CACHE[proj] = iterations
+    return iterations
+
+
+async def get_areas(project: str | None = None) -> list[str]:
+    """Return the flattened area paths available in ``project``.
+
+    Cached per project for the process lifetime.
+    """
+    proj = project or config.PROJECT
+    cached = _AREAS_CACHE.get(proj)
+    if cached is not None:
+        return cached
+
+    log.info("Fetching area tree for project=%s", proj)
+    data = await _run_az([
+        "boards", "area", "project", "list",
+        "--project", proj,
+        "--org", config.ORG_URL,
+    ])
+
+    areas: list[str] = []
+    if isinstance(data, dict):
+        areas = _flatten_node_paths(data)
+    elif isinstance(data, list):
+        for root in data:
+            if isinstance(root, dict):
+                areas.extend(_flatten_node_paths(root))
+
+    _AREAS_CACHE[proj] = areas
+    return areas
