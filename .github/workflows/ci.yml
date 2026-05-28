@@ -46,3 +46,33 @@ jobs:
           pip install pytest-cov --quiet
           pytest --cov=ado_dashboard --cov-report=term --cov-fail-under=60 -q || \
             echo "::warning::Coverage below 60% threshold — fix before raising the gate"
+
+  guard-no-squad-on-main:
+    # Squad framework files (AI agent scaffolding) must never land on main.
+    # Runs on direct pushes to main and on PRs targeting main.
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail if any Squad files are tracked
+        shell: bash
+        run: |
+          set -e
+          # Patterns that must NOT exist on main (per .gitignore policy).
+          PATTERNS=(
+            '.squad/'
+            '.github/agents/squad.agent.md'
+            '.github/workflows/squad-'
+            '.github/workflows/sync-squad-labels.yml'
+          )
+          FOUND=$(git ls-files | grep -E '^(\.squad/|\.github/agents/squad\.agent\.md|\.github/workflows/squad-|\.github/workflows/sync-squad-labels\.yml)' || true)
+          if [ -n "$FOUND" ]; then
+            echo "::error::Squad framework files detected on main branch:"
+            echo "$FOUND" | sed 's/^/  - /'
+            echo ""
+            echo "Squad scaffolding lives only on the dev branch."
+            echo "To fix: git rm -r --cached <paths>; git commit; push."
+            exit 1
+          fi
+          echo "✅ No Squad files tracked on main."
