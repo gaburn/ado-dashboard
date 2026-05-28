@@ -20,7 +20,10 @@ The `--demo` flag populates every tab with fictional Tolkien-themed fixture data
 
 ## Install & Run
 
-<!-- TODO: add screenshot or asciinema GIF here — biggest UX win is showing the TUI in action -->
+![ADO Dashboard — My PRs tab in demo mode](docs/screenshots/01-my-prs.png)
+
+> _Screenshots above and below were captured in `--demo` mode with fictional Middle-earth data._
+
 
 ```bash
 git clone https://github.com/gaburn/ado-dashboard.git
@@ -50,6 +53,36 @@ Re-run it any time with `ado-dashboard --setup`.
 | 3 | **Work Items** | ADO work items assigned to you. Filters out Closed, Done, Completed, Cut, and Resolved states. |
 | 4 | **Triage** | On-call triage board with a board selector dropdown, priority groups, categorization, action plan, and clickable links. Switching boards refreshes the view with a loading indicator. |
 | 5 | **Copilot Sessions** | Active Copilot CLI sessions with status, intent, and working directory. Press `R` (Shift+R) to resume an inactive session in a new Windows Terminal tab. Press `f` to focus the terminal of an active session. |
+
+### Screenshots
+
+<details>
+<summary><strong>Reviewing</strong> — PRs where you are a reviewer</summary>
+
+![Reviewing tab](docs/screenshots/02-reviewing.png)
+
+</details>
+
+<details>
+<summary><strong>Work Items</strong> — assigned items across Epic / Feature / Story / Task / Bug</summary>
+
+![Work Items tab](docs/screenshots/03-work-items.png)
+
+</details>
+
+<details>
+<summary><strong>Triage</strong> — priority-grouped board with AI-assisted categorization</summary>
+
+![Triage tab](docs/screenshots/04-triage.png)
+
+</details>
+
+<details>
+<summary><strong>Copilot Sessions</strong> — resumable AI sessions with intent and last-active timestamps</summary>
+
+![Copilot Sessions tab](docs/screenshots/05-copilot-sessions.png)
+
+</details>
 
 ## Keyboard Shortcuts
 

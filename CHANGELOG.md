@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Demo mode** (`--demo` flag / `ADO_DASHBOARD_DEMO=1` env var): bypasses all Azure DevOps calls and renders every tab with fictional Tolkien-themed fixture data. Ideal for screenshots, presentations, and onboarding without exposing real org/project data. A `🎭 DEMO MODE` banner appears in the status bar and app subtitle.
+- **README screenshots** — hero image plus per-tab gallery captured in demo mode, stored under `docs/screenshots/`.
 
 ## [0.2.1] - 2026-01-01
 
