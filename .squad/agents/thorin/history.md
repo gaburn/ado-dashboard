@@ -342,3 +342,23 @@ live `WIP_DASHBOARD_REPO_ROOT` hits outside `.squad/` history files.
 #### Tests
 - 208 passed, 1 skipped (snapshot module — pytest-textual-snapshot dep not yet in pyproject, Glóin's domain).
 - All of Dwalin's screen + integration tests green against my contract.
+
+### 2026-05-28 — Issue #3 implementation phase complete: 7 commits on `squad/3-edit-work-item-fields`, ready for PR
+
+**Scope:** Full feature implementation across 5 parallel agents (Balin, Dwalin, Thorin, Glóin, Bofur). All blockers resolved; v2 backlog established.
+
+**Agents & deliverables:**
+- **Balin (API):** 2 commits — added WorkItem.rev field, implemented `update_work_item()` with rev-guard and exception hierarchy
+- **Dwalin (Tests):** 1 commit — 58 test cases across screen + snapshot + integration; 31 initially green
+- **Thorin (this agent):** 2 commits — EditWorkItemScreen + modals + detail.py binding
+- **Glóin (Deps/CI):** 1 commit — added pytest-textual-snapshot dev dep + honest re-skip pending stabilization
+- **Bofur (UX/Polish):** 1 commit (e60c165) — review verdict (9 sections, 7 v2 deferrals), 2 polish fixes (type copy, error banner)
+
+**Final metrics:**
+- 208 tests passed, 1 skipped (snapshot module)
+- Blockers: 0
+- V2 backlog: 7 items (searchable paths, expanded editor, help, dirty indicator, field-local validation, binding relabeling, dim-background)
+- Decisions merged: 3 design docs + 1 Bofur review = 4 inbox files merged to decisions.md
+- Archive status: decisions.md at 16,799 bytes (under 20,480 threshold; ✓)
+
+**Next:** Ready for PR review. All 7 commits on branch `squad/3-edit-work-item-fields`.

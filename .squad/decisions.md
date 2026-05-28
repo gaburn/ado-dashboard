@@ -273,6 +273,44 @@ Full-screen one-column edit form (calm, matches Settings screen). Fields: Type (
 
 ---
 
+### Decision: Issue #3 UX Review and Polish — Bofur Final Verdict
+
+**Date:** 2026-05-28  
+**Author:** Bofur (UX specialist)  
+**Status:** Merged — 2 v1 fixes applied  
+**File:** `.squad/decisions/inbox/bofur-issue-3-ux-review.md`
+
+#### Summary
+
+Bofur conducted a comprehensive UX review of the EditWorkItemScreen implementation across 9 specification sections:
+
+**Match status:**
+- 4 full matches (layout, State, Description, Dirty state)
+- 3 partial drifts (Iteration/Area flat vs. searchable, Key map open-edit detail-only, Validation banner-only)
+- 1 intentional drift (Type read-only; change deferred to issue #4)
+- 1 mostly-match (Title validation, field-local `!` missing)
+
+**Verdict:** Shippable for v1 after two polish fixes applied in commit e60c165:
+1. Type field copy: removed internal issue-number reference (`(read-only — see issue #4)` → `(read-only in this version)`)
+2. Error banner specificity: moved `_error_detail` assignment before `_save_state` so status row renders actual validation/conflict detail
+
+**Modal-render override (Thorin's question):** Accept as-is for v1; file follow-up for dim-background restoration in v2. Override exists only to satisfy test inspection of `render().__str__()` and exposes required "Refresh" / "Discard" words. Visual side-effect (losing background dim) is cosmetic; rushed fix risks Textual internal conflicts.
+
+**Seven v2 / follow-up items deferred:**
+1. Searchable Iteration/Area path selection with typed fallback
+2. `Ctrl+E` expanded Description editor
+3. `?` edit help/discoverability
+4. Dirty state in footer/title: `Unsaved changes *`
+5. Field-local validation rows with invalid `!` marker
+6. Hide/relabel `Edit` binding on non-work-item detail screens
+7. Revisit conflict modal render/test strategy for dim background restoration
+
+#### Validation
+
+`python -m pytest src/tests/test_edit_work_item_screen.py -q` → 19 passed.
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
