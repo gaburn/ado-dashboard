@@ -103,3 +103,18 @@ live `WIP_DASHBOARD_REPO_ROOT` hits outside `.squad/` history files.
 
 **Note:** Setup wizard was saving bare organization names instead of full Azure DevOps URIs. Balin added `_normalize_org_url()` helper to `config.py` (applied in `load_from_file` and `apply_overrides`), and patched the wizard to normalize at prompt time. This is now a config layer concern — all org inputs should flow through normalization.
 
+### 2026-05-28 — Empty-state UX pattern: Branch on configured vs. unconfigured
+
+**Source:** Bofur's Triage tab UX fix  
+**Pattern:** Never reuse one signal for two different states. Empty list from "nothing configured" must look different from empty list from "everything done."
+
+**Application:** Triage tab now shows:
+- "No triage board configured. Add one in Settings if you'd like to use Triage." when `triage_script_path` is falsy
+- "No items in triage queue 🎉" when path is set and results are empty
+
+**General rule for future features:**
+1. Do not notify at startup (implies urgency or failure).
+2. Use the tab/panel itself as the invitation to configure.
+3. Name the cause ("not configured"), point to the fix ("Settings"), be optional in tone ("if you'd like").
+4. Keep the configured-but-empty copy as a distinct, accurate message.
+

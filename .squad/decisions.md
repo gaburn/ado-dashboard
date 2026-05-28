@@ -78,6 +78,64 @@ The `README.md` retains user-facing content and gains an "Architecture at a glan
 - Future architecture decisions should be documented in `docs/architecture.md` (or a new ADR under `docs/adr/` if the team adopts ADR format).
 - The `docs/` directory is not part of the wheel build and is purely for contributors.
 
+### Decision: Triage empty-state must branch on configured vs. unconfigured
+
+**Date:** 2026-05-28  
+**Author:** Bofur  
+**Status:** Implemented
+
+#### Rule
+
+**Never reuse one signal for two different states.**  
+An empty list because nothing was configured looks different from an empty list because everything's done.
+
+#### Context
+
+The Triage tab showed `"No items in triage queue 🎉"` in ALL empty cases, including when
+`triage_script_path` was never set. The 🎉 implies "all done!" — which is actively wrong
+when the user hasn't opted in to Triage at all.
+
+Separately, on every app launch, a warning toast fired:
+> `"Triage: triage_script_path is not configured — copy Get-TriageItems.ps1.example…"`
+
+Triage is optional. Scolding users for not setting up a feature they didn't ask for is noise.
+
+#### Decisions
+
+##### 1. Notification suppression
+`_fetch_and_populate_triage()` and `_refresh_triage()` in `dashboard.py` now check
+`config.TRIAGE_SCRIPT_PATH` **before** calling `fetch_triage_items()`. When the path
+is empty, the fetch is skipped silently (INFO log only) and the unconfigured empty state
+is shown. The `notify()` warning path is preserved for real errors (script set but fails).
+
+##### 2. Empty-state branching
+`_populate_triage_groups()` branches on `config.TRIAGE_SCRIPT_PATH`:
+
+| Condition | Message |
+|-----------|---------|
+| `TRIAGE_SCRIPT_PATH` falsy | "No triage board configured. Add one in Settings if you'd like to use Triage." |
+| `TRIAGE_SCRIPT_PATH` set, results empty | "No items in triage queue 🎉" |
+
+##### 3. Docs reference preserved in Settings
+The helpful `docs/triage-and-investigation.md` reference was removed from the toast (noise
+when unconfigured). It now appears as a static hint in the Triage Boards section of the
+Settings screen (`settings.py`) — visible only when the user is actively trying to configure
+triage. The reference also remains in the `TriageClientError` raised when the path IS set but
+the script file is missing (actionable error, correct context).
+
+##### 4. Settings discoverability
+The global `s` key binding for Settings is already in the footer (`Binding("s", "open_settings", "Settings")`).
+No additional binding was added. The empty-state message mentions "Settings" to connect the
+user to the fix.
+
+#### Pattern to follow
+
+For any future "feature not configured" empty state:
+1. **Do not notify at startup** — notification implies urgency or failure.
+2. **Use the tab/panel itself** as the invitation to configure.
+3. **Name the cause** (not configured), **point to the fix** (Settings), **be optional in tone** (if you'd like).
+4. **Keep the configured-but-empty copy** as a distinct, accurate message.
+
 ## Governance
 
 - All meaningful changes require team consensus
