@@ -47,6 +47,7 @@ Changelog = "https://github.com/gaburn/ado-dashboard/blob/main/CHANGELOG.md"
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
+    "pytest-textual-snapshot>=1.0",
     "ruff>=0.6",
 ]
 
