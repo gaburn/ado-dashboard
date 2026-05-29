@@ -214,6 +214,35 @@ class TestFormRender:
 
         _run(go())
 
+    def test_lookups_use_work_item_project_not_dashboard_default(self):
+        """Lookups must pass the WI's owning project (from area_path), so
+        cross-project work items (e.g. ``@Me`` WIQL results) get the right
+        states / iterations / areas instead of the dashboard's configured
+        project's data.
+        """
+        wi = _make_wi(area_path="OS\\Microsoft Security\\MTP\\Base")
+
+        async def go():
+            app = _push(wi)
+            async with app.run_test() as pilot:
+                await pilot.pause()
+                # All three lookups should have been called with project="OS"
+                # (the first segment of the area_path), NOT "TestProject"
+                # (the dashboard default in the fixture).
+                for mock in (
+                    ado_client.get_allowed_states,
+                    ado_client.get_iterations,
+                    ado_client.get_areas,
+                ):
+                    assert mock.await_count >= 1, mock
+                    last_kwargs = mock.await_args.kwargs
+                    assert last_kwargs.get("project") == "OS", (
+                        f"{mock} was called with project={last_kwargs.get('project')!r}, "
+                        f"expected 'OS' (derived from area_path)"
+                    )
+
+        _run(go())
+
 
 # ===========================================================================
 # Validation

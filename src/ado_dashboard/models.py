@@ -353,6 +353,19 @@ class WorkItem:
         """One-liner for clipboard: ``WI #id: title (type, state)``."""
         return f"WI #{self.id}: {self.title} ({self.work_item_type}, {self.state})"
 
+    @property
+    def project(self) -> str:
+        """The ADO project this work item belongs to.
+
+        Derived from the first segment of ``area_path``. WIQL queries can
+        return work items from projects other than the dashboard's
+        configured project (e.g. when filtering by ``@Me``), so this is the
+        authoritative source for "which project does this WI live in" when
+        making per-work-item REST calls (allowed states, iterations,
+        areas, updates).
+        """
+        return self.area_path.split("\\", 1)[0] if self.area_path else ""
+
     # -- Factory -------------------------------------------------------------
 
     @classmethod

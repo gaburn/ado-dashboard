@@ -312,25 +312,45 @@ class EditWorkItemScreen(Screen["bool | None"]):
     async def _populate_lookups(self) -> None:
         """Fetch allowed states + iteration/area trees and populate the Selects."""
         wi = self._work_item
+        # Work items can live in a project other than the one configured for
+        # the dashboard (WIQL ``@Me`` searches cross project boundaries). The
+        # area path's first segment is the WI's actual owning project, and
+        # the lookup APIs must be queried against THAT project — otherwise
+        # we get the wrong project's states / iterations / areas (or an
+        # empty list if the type doesn't exist there).
+        project = wi.project or None
+        failures: list[str] = []
+
         try:
             states = await ado_client.get_allowed_states(
-                wi.work_item_type, wi.state
+                wi.work_item_type, wi.state, project=project
             )
         except Exception:  # noqa: BLE001 — lookup failures must not crash the screen
             log.exception("get_allowed_states failed for type=%s", wi.work_item_type)
             states = []
+            failures.append("states")
 
         try:
-            iterations = await ado_client.get_iterations()
+            iterations = await ado_client.get_iterations(project=project)
         except Exception:  # noqa: BLE001
             log.exception("get_iterations failed")
             iterations = []
+            failures.append("iterations")
 
         try:
-            areas = await ado_client.get_areas()
+            areas = await ado_client.get_areas(project=project)
         except Exception:  # noqa: BLE001
             log.exception("get_areas failed")
             areas = []
+            failures.append("areas")
+
+        if failures:
+            self.notify(
+                f"Couldn't load: {', '.join(failures)}. See log for details.",
+                title="Lookup failed",
+                severity="warning",
+                timeout=8,
+            )
 
         if states:
             self._allowed_states = list(states)

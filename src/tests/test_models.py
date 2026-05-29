@@ -140,6 +140,53 @@ def test_work_item_description_html_stripping():
     assert wi.description == "<div>HTML description</div>"
 
 
+def test_work_item_project_derived_from_area_path():
+    """``WorkItem.project`` uses the first ``\\``-delimited segment of area_path.
+
+    Cross-project WIQL results (e.g. ``@Me`` queries) can return work items
+    whose owning project differs from the dashboard's configured project,
+    and the lookup APIs must be queried against the WI's actual project.
+    """
+    deep = WorkItem.from_az_json({
+        "id": 1,
+        "fields": {
+            "System.Title": "T",
+            "System.State": "Active",
+            "System.WorkItemType": "Task",
+            "System.IterationPath": "OS\\2604\\2604-01",
+            "System.AreaPath": "OS\\Microsoft Security\\MTP\\Base",
+            "System.ChangedDate": "2024-01-01T00:00:00Z",
+        },
+    })
+    assert deep.project == "OS"
+
+    flat = WorkItem.from_az_json({
+        "id": 2,
+        "fields": {
+            "System.Title": "T",
+            "System.State": "Active",
+            "System.WorkItemType": "Task",
+            "System.IterationPath": "Windows Defender",
+            "System.AreaPath": "Windows Defender",
+            "System.ChangedDate": "2024-01-01T00:00:00Z",
+        },
+    })
+    assert flat.project == "Windows Defender"
+
+    empty = WorkItem.from_az_json({
+        "id": 3,
+        "fields": {
+            "System.Title": "T",
+            "System.State": "Active",
+            "System.WorkItemType": "Task",
+            "System.IterationPath": "",
+            "System.AreaPath": "",
+            "System.ChangedDate": "2024-01-01T00:00:00Z",
+        },
+    })
+    assert empty.project == ""
+
+
 def test_triage_item_from_json_basic():
     """TriageItem.from_json parses basic triage data."""
     data = {

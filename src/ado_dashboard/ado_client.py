@@ -467,14 +467,19 @@ async def get_allowed_states(
         return cached
 
     log.info("Fetching allowed states for type=%s project=%s", work_item_type, proj)
-    # REST: GET /{project}/_apis/wit/workitemtypes/{type}/states?api-version=7.1
+    # REST: GET /{project}/_apis/wit/workitemtypes/{type}/states?api-version=7.1-preview
     # Wrapped via ``az devops invoke`` so we stay on a single transport.
+    # NOTE: the resource is ``workitemtypestates`` (singular trailing "s") and
+    # the API version must be the ``-preview`` qualifier; using ``7.1`` plain
+    # causes the CLI to reject with "--resource and --api-version combination
+    # is not correct", and ``workitemtypesstates`` (plural-plural) is not a
+    # valid resource name. We learned this the hard way on real work items.
     data = await _run_az([
         "devops", "invoke",
         "--area", "wit",
-        "--resource", "workitemtypesstates",
+        "--resource", "workitemtypestates",
         "--route-parameters", f"project={proj}", f"type={work_item_type}",
-        "--api-version", "7.1",
+        "--api-version", "7.1-preview",
         "--org", config.ORG_URL,
     ])
 
