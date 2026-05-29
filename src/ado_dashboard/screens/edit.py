@@ -116,12 +116,16 @@ class ConflictResolverModal(ModalScreen[Literal["refresh", "discard"]]):
 # ---------------------------------------------------------------------------
 # Discard-confirm modal — shown when the form is dirty and user hits Escape
 # ---------------------------------------------------------------------------
-class DiscardConfirmModal(ModalScreen[bool]):
-    """Confirm discarding unsaved edits."""
+DiscardChoice = Literal["save", "discard", "cancel"]
+
+
+class DiscardConfirmModal(ModalScreen["DiscardChoice"]):
+    """Confirm what to do with unsaved edits: save, discard, or keep editing."""
 
     BINDINGS: ClassVar[list[Binding]] = [
         Binding("escape", "cancel", "Keep editing", priority=True),
         Binding("y", "discard", "Discard", priority=True),
+        Binding("s", "save", "Save changes", priority=True),
     ]
 
     DEFAULT_CSS = """
@@ -129,7 +133,7 @@ class DiscardConfirmModal(ModalScreen[bool]):
         align: center middle;
     }
     DiscardConfirmModal #discard-dialog {
-        width: 60;
+        width: 70;
         max-width: 90%;
         height: auto;
         padding: 1 2;
@@ -148,22 +152,28 @@ class DiscardConfirmModal(ModalScreen[bool]):
 
     def compose(self) -> ComposeResult:
         with Container(id="discard-dialog"):
-            yield Static("Discard unsaved changes?")
+            yield Static("You have unsaved changes.")
             with Horizontal(id="discard-buttons"):
                 yield Button("Discard", id="discard", variant="error")
-                yield Button("Keep editing", id="cancel", variant="primary")
+                yield Button("Keep editing", id="cancel", variant="default")
+                yield Button("Save changes", id="save", variant="primary")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "discard":
             self.action_discard()
+        elif event.button.id == "save":
+            self.action_save()
         else:
             self.action_cancel()
 
     def action_discard(self) -> None:
-        self.dismiss(True)
+        self.dismiss("discard")
 
     def action_cancel(self) -> None:
-        self.dismiss(False)
+        self.dismiss("cancel")
+
+    def action_save(self) -> None:
+        self.dismiss("save")
 
 
 # ---------------------------------------------------------------------------
@@ -205,6 +215,14 @@ class EditWorkItemScreen(Screen["bool | None"]):
     }
     EditWorkItemScreen TextArea {
         height: 8;
+    }
+    EditWorkItemScreen #edit-buttons {
+        height: 3;
+        align: right middle;
+        margin-top: 1;
+    }
+    EditWorkItemScreen #edit-buttons Button {
+        margin-left: 1;
     }
     """
 
@@ -301,7 +319,18 @@ class EditWorkItemScreen(Screen["bool | None"]):
             yield TextArea(text=wi.description or "", id="field-description")
 
             yield Static("", id="edit-status")
+            with Horizontal(id="edit-buttons"):
+                yield Button("Cancel", id="edit-cancel-btn", variant="default")
+                yield Button("Save (Ctrl+S)", id="edit-save-btn", variant="primary")
         yield Footer()
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "edit-save-btn":
+            event.stop()
+            self.action_save()
+        elif event.button.id == "edit-cancel-btn":
+            event.stop()
+            self.action_cancel()
 
     # -- Mount: kick off allowed-value fetches -------------------------------
 
@@ -480,6 +509,7 @@ class EditWorkItemScreen(Screen["bool | None"]):
 
     def action_save(self) -> None:
         """Validate, then kick off the save worker. No-op while already saving."""
+        log.info("action_save invoked for #%d (state=%s)", self._work_item.id, self._save_state)
         if self._save_state == "saving":
             return
         title = self._current_title()
@@ -503,9 +533,12 @@ class EditWorkItemScreen(Screen["bool | None"]):
             self.dismiss(None)
             return
 
-        def _on_confirm(result: bool | None) -> None:
-            if result:
+        def _on_confirm(result: "DiscardChoice | None") -> None:
+            if result == "discard":
                 self.dismiss(None)
+            elif result == "save":
+                self.action_save()
+            # "cancel" or None → user stays in the form to keep editing
 
         self.app.push_screen(DiscardConfirmModal(), _on_confirm)
 
