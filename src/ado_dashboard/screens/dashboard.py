@@ -96,6 +96,46 @@ def _short_iteration(path: str) -> str:
     return path.rsplit("\\", 1)[-1] if path else ""
 
 
+def _wi_title_target_width(table: DataTable) -> int:
+    """Compute the desired width for the Work Items 'Title' column so the
+    table fills its available horizontal space.
+
+    Returns 0 if the table is not yet laid out (no width / no columns).
+    """
+    if not table.columns:
+        return 0
+    table_w = table.size.width
+    if table_w <= 0:
+        return 0
+    cols = list(table.columns.values())
+    if len(cols) < 3:
+        return 0
+    cell_pad = getattr(table, "cell_padding", 1)
+    overhead = 3 + cell_pad * 2 * len(cols)
+    other_content = sum(
+        max(col.content_width, len(col.label.plain))
+        for i, col in enumerate(cols)
+        if i != 2
+    )
+    return max(table_w - overhead - other_content, 20)
+
+
+def _fit_wi_title_column(table: DataTable, target: int) -> None:
+    """Pin the Work Items Title column to *target* width and refresh layout."""
+    if target <= 0 or not table.columns:
+        return
+    cols = list(table.columns.values())
+    if len(cols) < 3:
+        return
+    title_col = cols[2]
+    if title_col.width == target and not title_col.auto_width:
+        return
+    title_col.auto_width = False
+    title_col.width = target
+    title_col.content_width = target
+    table.refresh(layout=True)
+
+
 def _tree_order_work_items(
     items: list[WorkItem],
 ) -> list[tuple[int, WorkItem]]:
@@ -238,6 +278,7 @@ class DashboardScreen(Screen):
         self._ai_triage_launch_time: float = 0.0
         self._ai_triage_poll_timer = None
         self._ai_triage_poll_gen: int = 0
+        self._wi_title_width: int = 0
         self._ai_triage_status: str = ""
         self._ai_action_plan: str = ""
         # Search/filter state
@@ -281,6 +322,24 @@ class DashboardScreen(Screen):
     def on_mount(self) -> None:
         self._setup_columns()
         self._load_data()
+
+    def on_resize(self, event: events.Resize) -> None:
+        """Re-fit Work Items Title column when terminal width changes."""
+        try:
+            table = self.query_one("#work-items-table", DataTable)
+        except Exception:
+            return
+        target = _wi_title_target_width(table)
+        if target <= 0:
+            return
+        # Only re-render rows when the change is large enough to matter;
+        # always pin the column width so the table fills the viewport.
+        if abs(target - self._wi_title_width) > 4 and self._work_items:
+            self._wi_title_width = target
+            self._work_items = self._populate_wi_table(
+                table, self._work_items, title_max=target
+            )
+        _fit_wi_title_column(table, target)
 
     # -- Table setup ---------------------------------------------------------
 
@@ -382,7 +441,10 @@ class DashboardScreen(Screen):
                 log.warning("Work items fetch failed: %s", exc)
                 self.notify(f"Fetch error: {exc}", severity="error", timeout=10, markup=False)
                 items = []
-            self._work_items = self._populate_wi_table(wi_table, items)
+            self._work_items = self._populate_wi_table(
+                wi_table, items, title_max=_wi_title_target_width(wi_table)
+            )
+            _fit_wi_title_column(wi_table, _wi_title_target_width(wi_table))
             self._all_work_items = list(items)
             wi_table.loading = False
             self._update_status_bar()
@@ -738,21 +800,25 @@ class DashboardScreen(Screen):
 
     @staticmethod
     def _populate_wi_table(
-        table: DataTable, items: list[WorkItem],
+        table: DataTable, items: list[WorkItem], title_max: int | None = None,
     ) -> list[WorkItem]:
         """Clear and repopulate the Work Items DataTable in tree order.
 
         Returns the items in display order so the caller can update the
         backing list used for cursor-row → item mapping.
+
+        ``title_max`` caps the title column character width; when ``None``
+        the legacy 60-char cap is used (preserves existing tests).
         """
         table.clear()
         tree = _tree_order_work_items(items)
         display_order: list[WorkItem] = []
+        effective_title_cap = title_max if title_max and title_max > 10 else 60
 
         for depth, wi in tree:
             indent = "  " * depth
             arrow = "↳ " if depth > 0 else ""
-            max_title = 60 - len(indent) - len(arrow)
+            max_title = max(effective_title_cap - len(indent) - len(arrow), 10)
             title_str = f"{indent}{arrow}{_truncate(wi.title, max_title)}"
 
             if wi.is_context_parent:
@@ -1190,7 +1256,10 @@ class DashboardScreen(Screen):
             self._populate_reviewing_table(table, filtered)
             self._reviewing_prs = filtered
         elif table_type == "wi":
-            self._work_items = self._populate_wi_table(table, filtered)
+            self._work_items = self._populate_wi_table(
+                table, filtered, title_max=_wi_title_target_width(table)
+            )
+            _fit_wi_title_column(table, _wi_title_target_width(table))
         elif table_type == "session":
             self._populate_sessions_table(table, filtered)
             self._sessions = filtered
